@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detection System</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .container {
+        display: flex;
+        height: 100vh;
+      }
+
+      /* Sidebar Styles */
+      .sidebar {
+        width: 200px;
+        background-color: #2c3e50;
+        padding: 20px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .sidebar-btn {
+        width: 160px;
+        padding: 15px 20px;
+        margin: 10px 0;
+        background-color: #34495e;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+      }
+
+      .sidebar-btn:hover {
+        background-color: #1abc9c;
+      }
+
+      .sidebar-btn.active {
+        background-color: #1abc9c;
+      }
+
+      /* Main Content Styles */
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+      }
+
+      .control-panel {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .control-panel button {
+        padding: 12px 25px;
+        margin-right: 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+      }
+
+      #startBtn {
+        background-color: #27ae60;
+        color: white;
+      }
+
+      #stopBtn {
+        background-color: #e74c3c;
+        color: white;
+      }
+
+      /* Confidence Slider Styles */
+      .confidence-control {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #ecf0f1;
+      }
+
+      .slider-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-top: 8px;
+      }
+
+      .confidence-slider {
+        flex: 1;
+        height: 6px;
+        border-radius: 3px;
+        background: #ddd;
+        outline: none;
+      }
+
+      .confidence-value {
+        font-weight: bold;
+        color: #2c3e50;
+        min-width: 40px;
+      }
+
+      .confidence-label {
+        font-size: 14px;
+        color: #7f8c8d;
+        margin-top: 5px;
+      }
+
+      .video-container {
+        flex: 1;
+        background-color: #000;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .video-container img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
+
+      .status {
+        margin-top: 10px;
+        padding: 10px;
+        background: #ecf0f1;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Left Sidebar with 5 Buttons -->
+      <div class="sidebar">
+        <button class="sidebar-btn active">Detection</button>
+        <button class="sidebar-btn">Button 2</button>
+        <button class="sidebar-btn">Button 3</button>
+        <button class="sidebar-btn">Button 4</button>
+        <button class="sidebar-btn">Button 5</button>
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="main-content">
+        <!-- Control Buttons for Detection -->
+        <div class="control-panel">
+          <button id="startBtn">Start Detection</button>
+          <button id="stopBtn">Stop Detection</button>
+          <div class="status">Status: <span id="statusText">Ready</span></div>
+
+          <!-- Confidence Slider - Added here -->
+          <div class="confidence-control">
+            <div><strong>Confidence Threshold</strong></div>
+            <div class="slider-container">
+              <input
+                type="range"
+                min="0.1"
+                max="0.9"
+                step="0.05"
+                value="0.45"
+                class="confidence-slider"
+                id="confidenceSlider"
+              />
+              <span class="confidence-value" id="confidenceValue">0.45</span>
+            </div>
+            <div class="confidence-label">
+              Higher = fewer but more accurate detections
+            </div>
+          </div>
+        </div>
+
+        <!-- Video Feed -->
+        <div class="video-container">
+          <img
+            src="{{ url_for('video_feed') }}"
+            alt="Live Video Feed"
+            id="videoFeed"
+          />
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Start Detection
+      document
+        .getElementById("startBtn")
+        .addEventListener("click", function () {
+          fetch("/start_detection")
+            .then((response) => response.json())
+            .then((data) => {
+              document.getElementById("statusText").textContent =
+                "Detection Active";
+              document.getElementById("statusText").style.color = "green";
+              console.log("Start:", data);
+            })
+            .catch((error) => {
+              console.error("Error starting detection:", error);
+            });
+        });
+
+      // Stop Detection
+      document.getElementById("stopBtn").addEventListener("click", function () {
+        fetch("/stop_detection")
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("statusText").textContent =
+              "Detection Stopped";
+            document.getElementById("statusText").style.color = "red";
+            console.log("Stop:", data);
+          })
+          .catch((error) => {
+            console.error("Error stopping detection:", error);
+          });
+      });
+
+      // Confidence Slider Functionality
+      const confidenceSlider = document.getElementById("confidenceSlider");
+      const confidenceValue = document.getElementById("confidenceValue");
+
+      // Load current confidence value when page loads
+      window.addEventListener("load", function () {
+        fetch("/get_confidence")
+          .then((response) => response.json())
+          .then((data) => {
+            const currentConfidence = data.confidence;
+            confidenceSlider.value = currentConfidence;
+            confidenceValue.textContent = currentConfidence.toFixed(2);
+          })
+          .catch((error) => {
+            console.error("Error loading confidence:", error);
+          });
+      });
+
+      // Update confidence when slider changes
+      let confidenceTimeout;
+      confidenceSlider.addEventListener("input", function () {
+        const value = parseFloat(this.value);
+        confidenceValue.textContent = value.toFixed(2);
+
+        // Debounce the update to avoid too many requests
+        clearTimeout(confidenceTimeout);
+        confidenceTimeout = setTimeout(() => {
+          updateConfidence(value);
+        }, 300);
+      });
+
+      function updateConfidence(confidence) {
+        fetch(`/update_confidence/${confidence}`)
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Confidence update:", data);
+            // Show temporary success feedback
+            const originalText = confidenceValue.textContent;
+            confidenceValue.textContent = "✓ Saved";
+            confidenceValue.style.color = "green";
+
+            setTimeout(() => {
+              confidenceValue.textContent = originalText;
+              confidenceValue.style.color = "";
+            }, 1000);
+          })
+          .catch((error) => {
+            console.error("Error updating confidence:", error);
+            confidenceValue.textContent = "Error!";
+            confidenceValue.style.color = "red";
+          });
+      }
+
+      // Sidebar button functionality
+      document.querySelectorAll(".sidebar-btn").forEach((btn) => {
+        btn.addEventListener("click", function () {
+          document
+            .querySelectorAll(".sidebar-btn")
+            .forEach((b) => b.classList.remove("active"));
+          this.classList.add("active");
+        });
+      });
+
+      // Handle video feed errors
+      document
+        .getElementById("videoFeed")
+        .addEventListener("error", function () {
+          console.error(
+            "Video feed error - check your generate_frame function"
+          );
+          this.alt = "Video feed not available - check console for errors";
+        });
+    </script>
+  </body>
+</html>

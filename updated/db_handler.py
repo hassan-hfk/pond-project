@@ -6,7 +6,7 @@ from datetime import datetime
 DB_FILE = 'detections.db'
 
 # Connect to the database (creates if it doesn't exist)
-conn = sqlite3.connect(DB_FILE)
+conn = sqlite3.connect(DB_FILE,check_same_thread=False)
 cursor = conn.cursor()
 
 # Create table for detections
