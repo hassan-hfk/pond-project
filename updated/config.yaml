@@ -1,0 +1,49 @@
+calibration:
+  depth_scale: null
+  focal_px: 117.0
+  img_size:
+  - 640
+  - 640
+  ref_box_norm:
+  - 0.6109375
+  - 0.409375
+  - 0.7375
+  - 0.5921875
+  ref_distance_m: 2.0
+  ref_height_m: 2.0
+  vertical_vp:
+  - 307.0
+  - 1120.25
+camera:
+  device: 0
+  height: 640
+  width: 640
+gpio:
+  active_high: true
+  enabled: true
+  pin: 17
+logging:
+  events_file: events.log
+model:
+  conf_thresh: 0.45
+  yolov8_path: "best.pt"
+rois:
+- - - 0.275
+    - 0.446875
+  - - 0.3265625
+    - 0.2015625
+  - - 0.565625
+    - 0.2625
+  - - 0.575
+    - 0.390625
+  - - 0.50625
+    - 0.528125
+  - - 0.2890625
+    - 0.6171875
+  - - 0.0984375
+    - 0.6421875
+thresholds:
+  classes_trigger:
+  - person
+  consecutive_frames: 3
+  height_m: 0.2
