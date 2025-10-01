@@ -1,4 +1,3 @@
-# child_logic.py
 import cv2
 import yaml
 import numpy as np
@@ -140,6 +139,11 @@ class ChildMonitor:
 
         events = []
         debug = []
+        
+        # Get dwell time from config (default to 3 seconds if not specified)
+        dwell_time = float(self.cfg.get("thresholds", {}).get("dwell_time", 3.0))
+
+        current_time = time.time()
 
         for det in detections:
             cname = det.get("class_name", "")
@@ -180,19 +184,6 @@ class ChildMonitor:
 
             d["height_m"] = (None if math.isnan(H_est) else H_est)
 
-            # debounce logic (IMPORTANT: person increments counter wherever detected)
-            key = (int((x1+x2)/2) // 40, int(y2) // 40)
-
-            if cname == "person":
-                # **Record (count) person anywhere in the frame** — ignore ROI/height for counting.
-                # This ensures recordings are created for persons even if they are outside ROI or tall.
-                self.counts[key] += 1
-            else:
-                # other classes: no ROI / no height check
-                self.counts[key] += 1
-
-            d["count"] = int(self.counts[key])
-
             # Determine child_in_water (height + ROI still matters for this event type)
             child_in_water = (
                 cname == "person"
@@ -203,43 +194,122 @@ class ChildMonitor:
             # person_in_roi = any person in ROI but not child_in_water (tall person)
             person_in_roi = (cname == "person" and in_roi and not child_in_water)
 
-            # --- Trigger events with per-class cooldown ---
-            if self.counts[key] >= self.frames_needed:
-                now = time.time()
-                last_ts = self.last_trigger_ts.get(cname, 0)
-                if now - last_ts >= self.trigger_cooldown:
-                    # Choose event type
-                    if child_in_water:
-                        ev_type = "child_in_water"
-                    elif person_in_roi:
-                        ev_type = "person_in_roi"
-                    else:
-                        ev_type = "other_detected"
+            # --- Dwell time tracking ONLY for persons in ROI ---
+            if cname == "person" and in_roi:
+                # Create a precise key for tracking individuals in ROI
+                key = (int((x1+x2)/2) // 20, int((y1+y2)/2) // 20, cname)
+                
+                if key not in self.counts:
+                    # First time seeing this person in ROI - initialize timestamp
+                    self.counts[key] = current_time
+                    d["dwell_time"] = 0.0
+                    d["dwell_status"] = "started"
+                else:
+                    # Calculate how long this person has been in ROI
+                    dwell_duration = current_time - self.counts[key]
+                    d["dwell_time"] = dwell_duration
+                    d["dwell_status"] = "tracking"
+                    
+                    # Check if dwell time exceeds threshold
+                    if dwell_duration >= dwell_time:
+                        # Trigger event based on height classification
+                        now = time.time()
+                        last_ts = self.last_trigger_ts.get(cname, 0)
+                        
+                        if now - last_ts >= self.trigger_cooldown:
+                            # Choose event type
+                            if child_in_water:
+                                ev_type = "child_in_water"
+                            else:  # person_in_roi
+                                ev_type = "person_in_roi"
 
-                    ev = {
-                        "type": ev_type,
-                        "class": cname,
-                        "bbox": bbox,
-                        "height_m": d["height_m"],
-                        "in_roi": in_roi,
-                        "key": key,
-                        "timestamp": now
-                    }
-                    events.append(ev)
-                    # update per-class cooldown timestamp
-                    self.last_trigger_ts[cname] = now
+                            ev = {
+                                "type": ev_type,
+                                "class": cname,
+                                "bbox": bbox,
+                                "height_m": d["height_m"],
+                                "in_roi": in_roi,
+                                "dwell_time": dwell_duration,  # Include dwell time in event
+                                "key": key,
+                                "timestamp": now
+                            }
+                            events.append(ev)
+                            # update per-class cooldown timestamp
+                            self.last_trigger_ts[cname] = now
 
-                    # Publish MQTT (respects per-class cooldown)
-                    if mqtt_client:
-                        try:
-                            mqtt_client.publish("pond/detections", ev)
-                        except Exception:
-                            # fallback: publish string payload if client requires it
-                            mqtt_client.publish("pond/detections", str(ev))
-                        print(f"[MQTT] Published {ev_type} event for class '{cname}': {ev}")
+                            # Publish MQTT (respects per-class cooldown)
+                            if mqtt_client:
+                                try:
+                                    mqtt_client.publish("pond/detections", ev)
+                                except Exception:
+                                    # fallback: publish string payload if client requires it
+                                    mqtt_client.publish("pond/detections", str(ev))
+                                print(f"[MQTT] Published {ev_type} event for class '{cname}': dwell_time={dwell_duration:.2f}s")
 
-                # reset counter for this spatial key after firing (avoids immediate re-trigger)
-                self.counts[key] = 0
+                            # Reset tracking for this person
+                            self.counts[key] = current_time
+            else:
+                # For persons outside ROI and non-person classes, use simple frame counting
+                key = (int((x1+x2)/2) // 40, int(y2) // 40)
+                
+                if cname == "person" and not in_roi:
+                    # Person outside ROI
+                    self.counts[key] += 1
+                    d["count"] = int(self.counts[key])
+
+                    if self.counts[key] >= self.frames_needed:
+                        now = time.time()
+                        last_ts = self.last_trigger_ts.get(cname, 0)
+                        if now - last_ts >= self.trigger_cooldown:
+                            ev = {
+                                "type": "person_outside_roi",
+                                "class": cname,
+                                "bbox": bbox,
+                                "height_m": d["height_m"],
+                                "in_roi": in_roi,
+                                "key": key,
+                                "timestamp": now
+                            }
+                            events.append(ev)
+                            self.last_trigger_ts[cname] = now
+
+                            if mqtt_client:
+                                try:
+                                    mqtt_client.publish("pond/detections", ev)
+                                except Exception:
+                                    mqtt_client.publish("pond/detections", str(ev))
+                                print(f"[MQTT] Published person_outside_roi event for class '{cname}'")
+
+                            self.counts[key] = 0
+                elif cname != "person":
+                    # Non-person classes
+                    self.counts[key] += 1
+                    d["count"] = int(self.counts[key])
+
+                    if self.counts[key] >= self.frames_needed:
+                        now = time.time()
+                        last_ts = self.last_trigger_ts.get(cname, 0)
+                        if now - last_ts >= self.trigger_cooldown:
+                            ev = {
+                                "type": "other_detected",
+                                "class": cname,
+                                "bbox": bbox,
+                                "height_m": d["height_m"],
+                                "in_roi": in_roi,
+                                "key": key,
+                                "timestamp": now
+                            }
+                            events.append(ev)
+                            self.last_trigger_ts[cname] = now
+
+                            if mqtt_client:
+                                try:
+                                    mqtt_client.publish("pond/detections", ev)
+                                except Exception:
+                                    mqtt_client.publish("pond/detections", str(ev))
+                                print(f"[MQTT] Published other_detected event for class '{cname}'")
+
+                            self.counts[key] = 0
 
             debug.append(d)
 

@@ -1,6 +1,6 @@
 calibration:
-  depth_scale: null
-  focal_px: 117.0
+  depth_scale: ''
+  focal_px: 117
   img_size:
   - 640
   - 640
@@ -9,10 +9,10 @@ calibration:
   - 0.409375
   - 0.7375
   - 0.5921875
-  ref_distance_m: 2.0
-  ref_height_m: 2.0
+  ref_distance_m: 2
+  ref_height_m: 2
   vertical_vp:
-  - 307.0
+  - 307
   - 1120.25
 camera:
   device: 0
@@ -25,21 +25,20 @@ gpio:
 logging:
   events_file: events.log
 model:
-  conf_thresh: 0.75
+  conf_thresh: 0.4
   yolov8_path: best.pt
 rois:
-- - - 0.2534172478765462
-    - 0.20418199698823591
-  - - 0.8156631283308711
-    - 0.2689254620102491
-  - - 0.9051537165629426
-    - 0.5986522013714229
-  - - 0.15563456668194203
-    - 0.6353300316463772
-  - - 0.2404371053279911
-    - 0.340520315366493
+- - - 0.20911908759832662
+    - 0.3166311730791009
+  - - 0.8940367965154132
+    - 0.3609293333573204
+  - - 0.8964322094456307
+    - 0.783548152258436
+  - - 0.2503350799295138
+    - 0.7711269940391217
 thresholds:
   classes_trigger:
   - person
-  consecutive_frames: 3
-  height_m: 0.2
+  dwell_time: 2
+  height_m: 10
+  iou_threshold: 0.002

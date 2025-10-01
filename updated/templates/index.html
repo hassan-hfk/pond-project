@@ -147,17 +147,275 @@
         border-radius: 5px;
         font-weight: bold;
       }
+
+      /* Modal Styles */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.8);
+        backdrop-filter: blur(5px);
+      }
+
+      .modal-content {
+        background: linear-gradient(135deg, #1e1e1e, #2d2d2d);
+        margin: 2% auto;
+        padding: 0;
+        border-radius: 15px;
+        width: 90%;
+        height: 90%;
+        max-width: 1400px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        border: 1px solid #444;
+      }
+
+      .modal-header {
+        background: linear-gradient(135deg, #2c3e50, #34495e);
+        color: white;
+        padding: 20px 30px;
+        border-radius: 15px 15px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #444;
+      }
+
+      .modal-header h2 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 600;
+      }
+
+      .modal-header .close {
+        color: white;
+        font-size: 32px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.3s;
+      }
+
+      .modal-header .close:hover {
+        color: #1abc9c;
+      }
+
+      .modal-body {
+        flex: 1;
+        padding: 25px;
+        overflow-y: auto;
+        background: #1a1a1a;
+      }
+
+      /* Search and Filter Controls */
+      .search-controls {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 25px;
+        align-items: center;
+      }
+
+      .search-input {
+        flex: 1;
+        padding: 12px 20px;
+        border: 1px solid #444;
+        border-radius: 8px;
+        background: #2d2d2d;
+        color: white;
+        font-size: 14px;
+        transition: all 0.3s;
+      }
+
+      .search-input:focus {
+        outline: none;
+        border-color: #1abc9c;
+        box-shadow: 0 0 10px rgba(26, 188, 156, 0.3);
+      }
+
+      .filter-select {
+        padding: 12px 20px;
+        border: 1px solid #444;
+        border-radius: 8px;
+        background: #2d2d2d;
+        color: white;
+        font-size: 14px;
+        min-width: 180px;
+        cursor: pointer;
+      }
+
+      /* Video Grid Styles */
+      .video-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        padding: 10px;
+      }
+
+      .video-card {
+        background: linear-gradient(135deg, #2d2d2d, #3d3d3d);
+        border-radius: 12px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid #444;
+        position: relative;
+      }
+
+      .video-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        border-color: #1abc9c;
+      }
+
+      .video-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #1abc9c, #3498db);
+      }
+
+      .video-thumbnail {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        background: linear-gradient(45deg, #2c3e50, #34495e);
+      }
+
+      .video-info {
+        padding: 18px;
+      }
+
+      .video-name {
+        font-weight: 600;
+        color: white;
+        margin-bottom: 8px;
+        font-size: 15px;
+        line-height: 1.3;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .video-details {
+        font-size: 12px;
+        color: #bbb;
+        line-height: 1.4;
+      }
+
+      .event-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: bold;
+        margin-top: 5px;
+      }
+
+      .badge-child {
+        background: #e74c3c;
+        color: white;
+      }
+
+      .badge-person {
+        background: #3498db;
+        color: white;
+      }
+
+      .badge-other {
+        background: #95a5a6;
+        color: white;
+      }
+
+      .no-videos {
+        text-align: center;
+        padding: 60px 20px;
+        color: #888;
+        grid-column: 1 / -1;
+        font-size: 16px;
+      }
+
+      .no-videos i {
+        font-size: 48px;
+        margin-bottom: 15px;
+        display: block;
+      }
+
+      /* Video Player Modal */
+      #videoPlayerModal .modal-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        max-width: 90%;
+        max-height: 80%;
+        background: transparent;
+        box-shadow: none;
+        width: auto;
+        height: auto;
+      }
+
+      #videoPlayerModal video {
+        border-radius: 8px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+      }
+
+      /* Loading Animation */
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #1abc9c;
+        grid-column: 1 / -1;
+      }
+
+      .loading-spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #1abc9c;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 15px;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .video-grid {
+          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+          gap: 15px;
+        }
+        
+        .search-controls {
+          flex-direction: column;
+        }
+        
+        .filter-select {
+          min-width: 100%;
+        }
+      }
     </style>
   </head>
   <body>
     <div class="container">
-      <!-- Left Sidebar with 5 Buttons -->
+      <!-- Left Sidebar with 6 Buttons -->
       <div class="sidebar">
         <button class="sidebar-btn active" onclick="window.location.href='/'">Detection</button>
         <button class="sidebar-btn" onclick="window.location.href='/roi_editor'">ROI Editor</button>
-        <button class="sidebar-btn">Button 3</button>
-        <button class="sidebar-btn">Button 4</button>
-        <button class="sidebar-btn">Button 5</button>
+        <button class="sidebar-btn" onclick="window.location.href='/config_editor'">Config Editor</button>
+        <button class="sidebar-btn" onclick="showEventList()">Event List</button>
+        <button class="sidebar-btn">Analytics</button>
+        <button class="sidebar-btn">Settings</button>
       </div>
 
       <!-- Main Content Area -->
@@ -198,6 +456,39 @@
           />
         </div>
       </div>
+    </div>
+
+    <!-- Event List Modal -->
+    <div id="eventListModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>📹 Event Recordings</h2>
+          <span class="close" onclick="closeEventList()">&times;</span>
+        </div>
+        <div class="modal-body">
+          <div class="search-controls">
+            <input type="text" id="searchInput" placeholder="Search recordings..." class="search-input">
+            <select id="filterSelect" class="filter-select">
+              <option value="all">All Events</option>
+              <option value="child-in-water">Child in Water</option>
+              <option value="person-in-water">Person in Water</option>
+              <option value="person">Person Outside ROI</option>
+              <option value="manual">Manual Tests</option>
+            </select>
+          </div>
+          <div id="videoGrid" class="video-grid">
+            <!-- Videos will be loaded here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Player Modal -->
+    <div id="videoPlayerModal" class="modal">
+      <span class="close" onclick="closeVideoPlayer()">&times;</span>
+      <video id="modalVideoPlayer" class="modal-content" controls>
+        Your browser does not support the video tag.
+      </video>
     </div>
 
     <script>
@@ -305,6 +596,255 @@
           );
           this.alt = "Video feed not available - check console for errors";
         });
+
+      // Event List Functions
+      function showEventList() {
+        const modal = document.getElementById('eventListModal');
+        modal.style.display = 'block';
+        loadVideos();
+        
+        // Update active button
+        document.querySelectorAll('.sidebar-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+      }
+
+      function closeEventList() {
+        const modal = document.getElementById('eventListModal');
+        modal.style.display = 'none';
+      }
+
+      async function loadVideos() {
+        const grid = document.getElementById('videoGrid');
+        grid.innerHTML = `
+          <div class="loading">
+            <div class="loading-spinner"></div>
+            <div>Loading recordings...</div>
+          </div>
+        `;
+        
+        try {
+          const response = await fetch('/api/recordings');
+          const videos = await response.json();
+          displayVideos(videos);
+          setupSearchFilter(videos);
+        } catch (error) {
+          console.error('Error loading videos:', error);
+          grid.innerHTML = `
+            <div class="no-videos">
+              <i>📹</i>
+              <div>Error loading recordings</div>
+              <div style="font-size: 12px; margin-top: 10px;">${error.message}</div>
+            </div>
+          `;
+        }
+      }
+
+      function displayVideos(videos) {
+        const grid = document.getElementById('videoGrid');
+        
+        if (!videos || videos.length === 0) {
+            grid.innerHTML = `
+                <div class="no-videos">
+                    <i>🎥</i>
+                    <div>No recordings found</div>
+                    <div style="font-size: 12px; margin-top: 10px;">Recordings will appear here when events are detected</div>
+                </div>
+            `;
+            return;
+        }
+
+        grid.innerHTML = videos.map(video => {
+            const badgeClass = getBadgeClass(video.type);
+            const badgeText = getBadgeText(video.type);
+            const feedbackClass = video.is_correct === true ? 'feedback-correct' : 
+                                video.is_correct === false ? 'feedback-incorrect' : 'feedback-pending';
+            const feedbackText = video.is_correct === true ? '✓ Correct' : 
+                              video.is_correct === false ? '✗ Wrong' : 'Pending Review';
+            
+            return `
+                <div class="video-card">
+                    <div class="video-header">
+                        <img src="${video.thumbnail || getDefaultThumbnail(video.type)}" 
+                            alt="${video.name}" 
+                            class="video-thumbnail"
+                            onclick="playVideo('${video.url}', '${video.name}')"
+                            onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmMzZTUwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzhjOWE5YSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIFRodW1ibmFpbDwvdGV4dD48L3N2Zz4='">
+                        <div class="event-badge ${badgeClass}">${badgeText}</div>
+                    </div>
+                    <div class="video-info">
+                        <div class="video-name" title="${video.name}">${video.name.replace(/_/g, ' ').replace('.mp4', '')}</div>
+                        <div class="video-details">
+                            📏 ${video.size}<br>
+                            📅 ${video.timestamp}<br>
+                            🏷️ ${video.class} • ${video.in_roi ? 'In ROI' : 'Outside ROI'}<br>
+                            📊 ${video.height_m ? `H: ${video.height_m.toFixed(2)}m` : 'Height: N/A'}
+                        </div>
+                        <div class="feedback-status ${feedbackClass}">${feedbackText}</div>
+                        <div class="feedback-buttons">
+                            <button class="btn-correct" onclick="updateFeedback(${video.id}, true, this)">✅ Correct</button>
+                            <button class="btn-wrong" onclick="updateFeedback(${video.id}, false, this)">❌ Wrong</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+function getBadgeClass(eventType) {
+    if (eventType === 'child_in_water') return 'badge-child';
+    if (eventType === 'person_in_roi') return 'badge-person';
+    if (eventType === 'person_outside_roi') return 'badge-person';
+    return 'badge-other';
+}
+
+function getBadgeText(eventType) {
+    if (eventType === 'child_in_water') return 'CHILD ALERT';
+    if (eventType === 'person_in_roi') return 'PERSON IN WATER';
+    if (eventType === 'person_outside_roi') return 'PERSON DETECTED';
+    return 'OTHER EVENT';
+}
+
+function getDefaultThumbnail(eventType) {
+    if (eventType === 'child_in_water') {
+        return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTM0ZjNmIi8+PHRleHQgeD0iNTAlIiB5PSI0MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Q0hJTEQgSU4gV0FURVI8L3RleHQ+PHRleHQgeD0iNTAlIiB5PSI2MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Q2xpY2sgdG8gcGxheTwvdGV4dD48L3N2Zz4=';
+    }
+    if (eventType === 'person_in_roi') {
+        return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIzNDk4ZGIiLz48dGV4dCB4PSI1MCUiIHk9IjQwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5QRVJTT04gSU4gV0FURVI8L3RleHQ+PHRleHQgeD0iNTAlIiB5PSI2MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Q2xpY2sgdG8gcGxheTwvdGV4dD48L3N2Zz4=';
+    }
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmMzZTUwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzhjOWE5YSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Q2xpY2sgdG8gcGxheTwvdGV4dD48L3N2Zz4=';
+}
+
+async function updateFeedback(eventId, isCorrect, buttonElement) {
+    try {
+        const response = await fetch(`/update_feedback/${eventId}/${isCorrect}`);
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            // Update the UI
+            const card = buttonElement.closest('.video-card');
+            const feedbackStatus = card.querySelector('.feedback-status');
+            const feedbackButtons = card.querySelector('.feedback-buttons');
+            
+            if (isCorrect) {
+                feedbackStatus.textContent = '✓ Correct';
+                feedbackStatus.className = 'feedback-status feedback-correct';
+            } else {
+                feedbackStatus.textContent = '✗ Wrong';
+                feedbackStatus.className = 'feedback-status feedback-incorrect';
+            }
+            
+            // Show success message
+            buttonElement.textContent = '✓ Saved';
+            buttonElement.style.background = '#27ae60';
+            
+            setTimeout(() => {
+                if (isCorrect) {
+                    buttonElement.textContent = '✅ Correct';
+                } else {
+                    buttonElement.textContent = '❌ Wrong';
+                }
+                buttonElement.style.background = '';
+            }, 2000);
+            
+        } else {
+            alert('Error updating feedback: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error updating feedback:', error);
+        alert('Error updating feedback');
+    }
+}
+
+      function getBadgeClass(filename) {
+        if (filename.includes('child-in-water')) return 'badge-child';
+        if (filename.includes('person-in-water')) return 'badge-person';
+        if (filename.includes('person_')) return 'badge-person';
+        return 'badge-other';
+      }
+
+      function getBadgeText(filename) {
+        if (filename.includes('child-in-water')) return 'CHILD ALERT';
+        if (filename.includes('person-in-water')) return 'PERSON IN WATER';
+        if (filename.includes('person_')) return 'PERSON DETECTED';
+        if (filename.includes('manual')) return 'MANUAL TEST';
+        return 'OTHER EVENT';
+      }
+
+      function getDefaultThumbnail(filename) {
+        // Return different colored backgrounds based on event type
+        if (filename.includes('child-in-water')) {
+          return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTM0ZjNmIi8+PHRleHQgeD0iNTAlIiB5PSI0MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Q0hJTEQgSU4gV0FURVI8L3RleHQ+PHRleHQgeD0iNTAlIiB5PSI2MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Q2xpY2sgdG8gcGxheTwvdGV4dD48L3N2Zz4=';
+        }
+        if (filename.includes('person-in-water')) {
+          return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIzNDk4ZGIiLz48dGV4dCB4PSI1MCUiIHk9IjQwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5QRVJTT04gSU4gV0FURVI8L3RleHQ+PHRleHQgeD0iNTAlIiB5PSI2MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Q2xpY2sgdG8gcGxheTwvdGV4dD48L3N2Zz4=';
+        }
+        return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmMzZTUwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzhjOWE5YSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Q2xpY2sgdG8gcGxheTwvdGV4dD48L3N2Zz4=';
+      }
+
+      function setupSearchFilter(videos) {
+        const searchInput = document.getElementById('searchInput');
+        const filterSelect = document.getElementById('filterSelect');
+        
+        const filterVideos = () => {
+          const searchTerm = searchInput.value.toLowerCase();
+          const filterValue = filterSelect.value;
+          
+          const filtered = videos.filter(video => {
+            const matchesSearch = video.name.toLowerCase().includes(searchTerm);
+            const matchesFilter = filterValue === 'all' || 
+                                (filterValue === 'child-in-water' && video.name.includes('child-in-water')) ||
+                                (filterValue === 'person-in-water' && video.name.includes('person-in-water')) ||
+                                (filterValue === 'person' && video.name.includes('person_') && !video.name.includes('person-in-water')) ||
+                                (filterValue === 'manual' && video.name.includes('manual'));
+            
+            return matchesSearch && matchesFilter;
+          });
+          
+          displayVideos(filtered);
+        };
+        
+        searchInput.addEventListener('input', filterVideos);
+        filterSelect.addEventListener('change', filterVideos);
+      }
+
+      function playVideo(videoUrl, videoName) {
+        const modal = document.getElementById('videoPlayerModal');
+        const video = document.getElementById('modalVideoPlayer');
+        
+        video.src = videoUrl;
+        modal.style.display = 'block';
+        video.play().catch(e => console.log('Autoplay prevented:', e));
+      }
+
+      function closeVideoPlayer() {
+        const modal = document.getElementById('videoPlayerModal');
+        const video = document.getElementById('modalVideoPlayer');
+        
+        video.pause();
+        video.src = '';
+        modal.style.display = 'none';
+      }
+
+      // Close modals when clicking outside
+      window.addEventListener('click', (event) => {
+        const eventModal = document.getElementById('eventListModal');
+        const videoModal = document.getElementById('videoPlayerModal');
+        
+        if (event.target === eventModal) {
+          closeEventList();
+        }
+        if (event.target === videoModal) {
+          closeVideoPlayer();
+        }
+      });
+
+      // Close modals with Escape key
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          closeEventList();
+          closeVideoPlayer();
+        }
+      });
     </script>
   </body>
 </html>
