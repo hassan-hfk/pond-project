@@ -43,11 +43,11 @@ class VideoRecorder:
 
             # filename
             ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"{class_name}_{ts}.mp4"
+            filename = f"{class_name}_{ts}.webm"
             path = os.path.join(self.output_dir, filename)
 
             # video writer
-            fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+            fourcc = cv2.VideoWriter_fourcc(*"VP90")
             self.writer = cv2.VideoWriter(path, fourcc, self.fps, self.frame_size)
 
             if not self.writer.isOpened():

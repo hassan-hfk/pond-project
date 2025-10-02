@@ -1,3 +1,5 @@
+[file name]: index.html
+[file content begin]
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -347,6 +349,65 @@
         display: block;
       }
 
+      /* Feedback Styles */
+      .feedback-status {
+        margin-top: 8px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .feedback-correct {
+        background: #27ae60;
+        color: white;
+      }
+
+      .feedback-incorrect {
+        background: #e74c3c;
+        color: white;
+      }
+
+      .feedback-pending {
+        background: #f39c12;
+        color: white;
+      }
+
+      .feedback-buttons {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .feedback-buttons button {
+        flex: 1;
+        padding: 6px 8px;
+        border: none;
+        border-radius: 4px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .btn-correct {
+        background: #27ae60;
+        color: white;
+      }
+
+      .btn-correct:hover {
+        background: #219955;
+      }
+
+      .btn-wrong {
+        background: #e74c3c;
+        color: white;
+      }
+
+      .btn-wrong:hover {
+        background: #c0392b;
+      }
+
       /* Video Player Modal */
       #videoPlayerModal .modal-content {
         position: absolute;
@@ -470,9 +531,9 @@
             <input type="text" id="searchInput" placeholder="Search recordings..." class="search-input">
             <select id="filterSelect" class="filter-select">
               <option value="all">All Events</option>
-              <option value="child-in-water">Child in Water</option>
-              <option value="person-in-water">Person in Water</option>
-              <option value="person">Person Outside ROI</option>
+              <option value="child_in_water">Child in Water</option>
+              <option value="person_in_roi">Person in Water</option>
+              <option value="person_outside_roi">Person Outside ROI</option>
               <option value="manual">Manual Tests</option>
             </select>
           </div>
@@ -663,22 +724,20 @@
             
             return `
                 <div class="video-card">
-                    <div class="video-header">
-                        <img src="${video.thumbnail || getDefaultThumbnail(video.type)}" 
-                            alt="${video.name}" 
-                            class="video-thumbnail"
-                            onclick="playVideo('${video.url}', '${video.name}')"
-                            onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmMzZTUwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzhjOWE5YSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIFRodW1ibmFpbDwvdGV4dD48L3N2Zz4='">
-                        <div class="event-badge ${badgeClass}">${badgeText}</div>
-                    </div>
+                    <img src="${video.thumbnail}" 
+                         alt="${video.name}" 
+                         class="video-thumbnail"
+                         onclick="playVideo('${video.url}', '${video.name}')"
+                         onerror="this.src='${getDefaultThumbnail(video.type)}'">
                     <div class="video-info">
-                        <div class="video-name" title="${video.name}">${video.name.replace(/_/g, ' ').replace('.mp4', '')}</div>
+                        <div class="video-name" title="${video.name}">${formatVideoName(video.name)}</div>
                         <div class="video-details">
                             📏 ${video.size}<br>
                             📅 ${video.timestamp}<br>
                             🏷️ ${video.class} • ${video.in_roi ? 'In ROI' : 'Outside ROI'}<br>
                             📊 ${video.height_m ? `H: ${video.height_m.toFixed(2)}m` : 'Height: N/A'}
                         </div>
+                        <div class="event-badge ${badgeClass}">${badgeText}</div>
                         <div class="feedback-status ${feedbackClass}">${feedbackText}</div>
                         <div class="feedback-buttons">
                             <button class="btn-correct" onclick="updateFeedback(${video.id}, true, this)">✅ Correct</button>
@@ -688,97 +747,75 @@
                 </div>
             `;
         }).join('');
-    }
+      }
 
-function getBadgeClass(eventType) {
-    if (eventType === 'child_in_water') return 'badge-child';
-    if (eventType === 'person_in_roi') return 'badge-person';
-    if (eventType === 'person_outside_roi') return 'badge-person';
-    return 'badge-other';
-}
+      function formatVideoName(filename) {
+        // Remove file extension and replace underscores with spaces
+        return filename.replace('.mp4', '').replace('.avi', '').replace(/_/g, ' ');
+      }
 
-function getBadgeText(eventType) {
-    if (eventType === 'child_in_water') return 'CHILD ALERT';
-    if (eventType === 'person_in_roi') return 'PERSON IN WATER';
-    if (eventType === 'person_outside_roi') return 'PERSON DETECTED';
-    return 'OTHER EVENT';
-}
-
-function getDefaultThumbnail(eventType) {
-    if (eventType === 'child_in_water') {
-        return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTM0ZjNmIi8+PHRleHQgeD0iNTAlIiB5PSI0MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Q0hJTEQgSU4gV0FURVI8L3RleHQ+PHRleHQgeD0iNTAlIiB5PSI2MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Q2xpY2sgdG8gcGxheTwvdGV4dD48L3N2Zz4=';
-    }
-    if (eventType === 'person_in_roi') {
-        return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIzNDk4ZGIiLz48dGV4dCB4PSI1MCUiIHk9IjQwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5QRVJTT04gSU4gV0FURVI8L3RleHQ+PHRleHQgeD0iNTAlIiB5PSI2MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Q2xpY2sgdG8gcGxheTwvdGV4dD48L3N2Zz4=';
-    }
-    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmMzZTUwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzhjOWE5YSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Q2xpY2sgdG8gcGxheTwvdGV4dD48L3N2Zz4=';
-}
-
-async function updateFeedback(eventId, isCorrect, buttonElement) {
-    try {
-        const response = await fetch(`/update_feedback/${eventId}/${isCorrect}`);
-        const result = await response.json();
-        
-        if (result.status === 'success') {
-            // Update the UI
-            const card = buttonElement.closest('.video-card');
-            const feedbackStatus = card.querySelector('.feedback-status');
-            const feedbackButtons = card.querySelector('.feedback-buttons');
-            
-            if (isCorrect) {
-                feedbackStatus.textContent = '✓ Correct';
-                feedbackStatus.className = 'feedback-status feedback-correct';
-            } else {
-                feedbackStatus.textContent = '✗ Wrong';
-                feedbackStatus.className = 'feedback-status feedback-incorrect';
-            }
-            
-            // Show success message
-            buttonElement.textContent = '✓ Saved';
-            buttonElement.style.background = '#27ae60';
-            
-            setTimeout(() => {
-                if (isCorrect) {
-                    buttonElement.textContent = '✅ Correct';
-                } else {
-                    buttonElement.textContent = '❌ Wrong';
-                }
-                buttonElement.style.background = '';
-            }, 2000);
-            
-        } else {
-            alert('Error updating feedback: ' + result.message);
-        }
-    } catch (error) {
-        console.error('Error updating feedback:', error);
-        alert('Error updating feedback');
-    }
-}
-
-      function getBadgeClass(filename) {
-        if (filename.includes('child-in-water')) return 'badge-child';
-        if (filename.includes('person-in-water')) return 'badge-person';
-        if (filename.includes('person_')) return 'badge-person';
+      function getBadgeClass(eventType) {
+        if (eventType === 'child_in_water') return 'badge-child';
+        if (eventType === 'person_in_roi') return 'badge-person';
+        if (eventType === 'person_outside_roi') return 'badge-person';
         return 'badge-other';
       }
 
-      function getBadgeText(filename) {
-        if (filename.includes('child-in-water')) return 'CHILD ALERT';
-        if (filename.includes('person-in-water')) return 'PERSON IN WATER';
-        if (filename.includes('person_')) return 'PERSON DETECTED';
-        if (filename.includes('manual')) return 'MANUAL TEST';
+      function getBadgeText(eventType) {
+        if (eventType === 'child_in_water') return 'CHILD ALERT';
+        if (eventType === 'person_in_roi') return 'PERSON IN WATER';
+        if (eventType === 'person_outside_roi') return 'PERSON DETECTED';
         return 'OTHER EVENT';
       }
 
-      function getDefaultThumbnail(filename) {
-        // Return different colored backgrounds based on event type
-        if (filename.includes('child-in-water')) {
+      function getDefaultThumbnail(eventType) {
+        if (eventType === 'child_in_water') {
           return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTM0ZjNmIi8+PHRleHQgeD0iNTAlIiB5PSI0MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Q0hJTEQgSU4gV0FURVI8L3RleHQ+PHRleHQgeD0iNTAlIiB5PSI2MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Q2xpY2sgdG8gcGxheTwvdGV4dD48L3N2Zz4=';
         }
-        if (filename.includes('person-in-water')) {
+        if (eventType === 'person_in_roi') {
           return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIzNDk4ZGIiLz48dGV4dCB4PSI1MCUiIHk9IjQwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5QRVJTT04gSU4gV0FURVI8L3RleHQ+PHRleHQgeD0iNTAlIiB5PSI2MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Q2xpY2sgdG8gcGxheTwvdGV4dD48L3N2Zz4=';
         }
         return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmMzZTUwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzhjOWE5YSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Q2xpY2sgdG8gcGxheTwvdGV4dD48L3N2Zz4=';
+      }
+
+      async function updateFeedback(eventId, isCorrect, buttonElement) {
+        try {
+            const response = await fetch(`/update_feedback/${eventId}/${isCorrect}`);
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                // Update the UI
+                const card = buttonElement.closest('.video-card');
+                const feedbackStatus = card.querySelector('.feedback-status');
+                
+                if (isCorrect) {
+                    feedbackStatus.textContent = '✓ Correct';
+                    feedbackStatus.className = 'feedback-status feedback-correct';
+                } else {
+                    feedbackStatus.textContent = '✗ Wrong';
+                    feedbackStatus.className = 'feedback-status feedback-incorrect';
+                }
+                
+                // Show success message
+                buttonElement.textContent = '✓ Saved';
+                buttonElement.style.background = '#27ae60';
+                
+                setTimeout(() => {
+                    if (isCorrect) {
+                        buttonElement.textContent = '✅ Correct';
+                    } else {
+                        buttonElement.textContent = '❌ Wrong';
+                    }
+                    buttonElement.style.background = '';
+                }, 2000);
+                
+            } else {
+                alert('Error updating feedback: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error updating feedback:', error);
+            alert('Error updating feedback');
+        }
       }
 
       function setupSearchFilter(videos) {
@@ -790,12 +827,10 @@ async function updateFeedback(eventId, isCorrect, buttonElement) {
           const filterValue = filterSelect.value;
           
           const filtered = videos.filter(video => {
-            const matchesSearch = video.name.toLowerCase().includes(searchTerm);
+            const matchesSearch = video.name.toLowerCase().includes(searchTerm) || 
+                                 video.class.toLowerCase().includes(searchTerm);
             const matchesFilter = filterValue === 'all' || 
-                                (filterValue === 'child-in-water' && video.name.includes('child-in-water')) ||
-                                (filterValue === 'person-in-water' && video.name.includes('person-in-water')) ||
-                                (filterValue === 'person' && video.name.includes('person_') && !video.name.includes('person-in-water')) ||
-                                (filterValue === 'manual' && video.name.includes('manual'));
+                                video.type === filterValue;
             
             return matchesSearch && matchesFilter;
           });
@@ -848,3 +883,4 @@ async function updateFeedback(eventId, isCorrect, buttonElement) {
     </script>
   </body>
 </html>
+[file content end]

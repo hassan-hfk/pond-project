@@ -35,7 +35,7 @@ def insert_detection(filename, event_dict, output_dir="recordings"):
     event_dict: dict containing event info
     output_dir: folder where video is saved
     """
-    video_path = os.path.abspath(os.path.join(output_dir, filename))
+    video_path = filename
 
     cursor.execute('''
         INSERT INTO events (filename, type, class, bbox, height_m, in_roi, key_x, key_y, timestamp)
