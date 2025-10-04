@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Config Editor - Detection System</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .container {
+        display: flex;
+        height: 100vh;
+      }
+
+      /* Sidebar Styles */
+      .sidebar {
+        width: 200px;
+        background-color: #2c3e50;
+        padding: 20px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .sidebar-btn {
+        width: 160px;
+        padding: 15px 20px;
+        margin: 10px 0;
+        background-color: #34495e;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+      }
+
+      .sidebar-btn:hover {
+        background-color: #1abc9c;
+      }
+
+      .sidebar-btn.active {
+        background-color: #1abc9c;
+      }
+
+      /* Main Content Styles */
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        overflow-y: auto;
+      }
+
+      .config-panel {
+        margin-bottom: 20px;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .section {
+        margin-bottom: 25px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        border-left: 4px solid #3498db;
+      }
+
+      .section-title {
+        color: #2c3e50;
+        margin-bottom: 15px;
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .field-group {
+        margin-bottom: 15px;
+        padding: 10px;
+        background: white;
+        border-radius: 4px;
+        border: 1px solid #e9ecef;
+      }
+
+      .field-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+        padding: 5px 0;
+      }
+
+      .field-label {
+        width: 200px;
+        font-weight: bold;
+        color: #2c3e50;
+        font-size: 14px;
+      }
+
+      .field-input {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      .field-input:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+      }
+
+      .array-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 5px;
+        padding: 5px;
+        background: #f8f9fa;
+        border-radius: 3px;
+      }
+
+      .array-input {
+        flex: 1;
+        padding: 6px 10px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        font-size: 13px;
+        margin-right: 10px;
+      }
+
+      .remove-btn {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        padding: 4px 8px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+
+      .remove-btn:hover {
+        background: #c0392b;
+      }
+
+      .add-btn {
+        background: #27ae60;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        padding: 6px 12px;
+        cursor: pointer;
+        font-size: 12px;
+        margin-top: 5px;
+      }
+
+      .add-btn:hover {
+        background: #219a52;
+      }
+
+      .nested-section {
+        margin-left: 20px;
+        margin-top: 10px;
+        padding: 10px;
+        background: #e9ecef;
+        border-radius: 4px;
+      }
+
+      .save-button {
+        background-color: #27ae60;
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        margin-top: 20px;
+      }
+
+      .save-button:hover {
+        background-color: #219a52;
+      }
+
+      .status {
+        margin-top: 15px;
+        padding: 10px;
+        background: #ecf0f1;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+
+      .roi-point {
+        display: flex;
+        align-items: center;
+        margin-bottom: 5px;
+        padding: 8px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      .roi-coord {
+        flex: 1;
+        margin: 0 5px;
+      }
+
+      .help-text {
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 5px;
+      }
+
+      .thresholds-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 10px;
+      }
+
+      .threshold-item {
+        padding: 10px;
+        background: white;
+        border-radius: 4px;
+        border: 1px solid #e9ecef;
+      }
+
+      .checkbox-field {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .checkbox-field input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 20px;
+        color: #6c757d;
+        font-style: italic;
+      }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Sidebar with 6 Buttons (matching index.html) -->
+        <div class="sidebar">
+            <button class="sidebar-btn" onclick="window.location.href='/'">Detection</button>
+            <button class="sidebar-btn" onclick="window.location.href='/roi_editor'">ROI Editor</button>
+            <button class="sidebar-btn active">Config Editor</button>
+            <button class="sidebar-btn" onclick="window.location.href='/?showEventList=true'">Event List</button>
+            <button class="sidebar-btn">Analytics</button>
+            <button class="sidebar-btn">Settings</button>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Config Editor -->
+            <div class="config-panel">
+                <h2 style="color: #2c3e50; margin-bottom: 20px;">Configuration Editor</h2>
+                <p style="margin-bottom: 20px; color: #6c757d;">Edit all configuration parameters. Changes will be saved to config.yaml</p>
+                
+                <div id="configForm">
+                    <div class="loading" id="loadingMessage">Loading configuration...</div>
+                </div>
+
+                <button class="save-button" onclick="saveConfig()">Save All Configuration</button>
+                <div class="status" id="statusText">Ready - Loading configuration...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load full config when page loads
+        window.addEventListener('load', function() {
+            loadFullConfig();
+        });
+
+        function loadFullConfig() {
+            document.getElementById('loadingMessage').style.display = 'block';
+            document.getElementById('statusText').textContent = 'Loading configuration...';
+            document.getElementById('statusText').style.color = 'blue';
+
+            fetch('/get_full_config')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('loadingMessage').style.display = 'none';
+                    if (data.config) {
+                        renderConfigForm(data.config);
+                        document.getElementById('statusText').textContent = 'Configuration loaded successfully';
+                        document.getElementById('statusText').style.color = 'green';
+                    } else {
+                        throw new Error('No config data received');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading config:', error);
+                    document.getElementById('loadingMessage').style.display = 'none';
+                    document.getElementById('statusText').textContent = 'Error loading configuration: ' + error.message;
+                    document.getElementById('statusText').style.color = 'red';
+                    
+                    // Show error and retry button
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'field-group';
+                    errorDiv.innerHTML = `
+                        <div style="color: #e74c3c; margin-bottom: 10px;">
+                            Failed to load configuration. Please check if the server is running and try again.
+                        </div>
+                        <button class="add-btn" onclick="loadFullConfig()">Retry Loading Config</button>
+                    `;
+                    document.getElementById('configForm').appendChild(errorDiv);
+                });
+        }
+
+        function renderConfigForm(config) {
+            const formContainer = document.getElementById('configForm');
+            formContainer.innerHTML = '';
+
+            // Render each section in the exact order from your config
+            renderSection(formContainer, 'calibration', config.calibration || {});
+            renderSection(formContainer, 'camera', config.camera || {});
+            renderSection(formContainer, 'gpio', config.gpio || {});
+            renderSection(formContainer, 'logging', config.logging || {});
+            renderSection(formContainer, 'model', config.model || {});
+            renderROISection(formContainer, 'rois', config.rois || []);
+            renderThresholdsSection(formContainer, 'thresholds', config.thresholds || {});
+        }
+
+        function renderSection(container, sectionName, sectionData) {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'section';
+            
+            const title = document.createElement('div');
+            title.className = 'section-title';
+            title.textContent = sectionName.charAt(0).toUpperCase() + sectionName.slice(1);
+            sectionDiv.appendChild(title);
+
+            for (const [key, value] of Object.entries(sectionData)) {
+                const fieldGroup = document.createElement('div');
+                fieldGroup.className = 'field-group';
+                
+                if (Array.isArray(value)) {
+                    renderArrayField(fieldGroup, sectionName, key, value);
+                } else if (typeof value === 'object' && value !== null) {
+                    renderNestedObject(fieldGroup, sectionName, key, value);
+                } else {
+                    renderSimpleField(fieldGroup, sectionName, key, value);
+                }
+                
+                sectionDiv.appendChild(fieldGroup);
+            }
+            
+            container.appendChild(sectionDiv);
+        }
+
+        function renderThresholdsSection(container, sectionName, sectionData) {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'section';
+            
+            const title = document.createElement('div');
+            title.className = 'section-title';
+            title.textContent = 'Thresholds';
+            title.innerHTML += ' <span style="font-size: 12px; color: #6c757d;">(Detection sensitivity parameters)</span>';
+            sectionDiv.appendChild(title);
+
+            const gridContainer = document.createElement('div');
+            gridContainer.className = 'thresholds-grid';
+
+            for (const [key, value] of Object.entries(sectionData)) {
+                const thresholdItem = document.createElement('div');
+                thresholdItem.className = 'threshold-item';
+                
+                if (key === 'classes_trigger' && Array.isArray(value)) {
+                    renderClassesTrigger(thresholdItem, sectionName, key, value);
+                } else {
+                    renderThresholdField(thresholdItem, sectionName, key, value);
+                }
+                
+                gridContainer.appendChild(thresholdItem);
+            }
+            
+            sectionDiv.appendChild(gridContainer);
+            container.appendChild(sectionDiv);
+        }
+
+        function renderThresholdField(container, section, key, value) {
+            const label = document.createElement('div');
+            label.className = 'field-label';
+            
+            const labels = {
+                'dwell_time': 'Dwell Time (seconds)',
+                'height_m': 'Height Threshold (meters)',
+                'iou_threshold': 'IOU Threshold',
+                'consecutive_frames': 'Consecutive Frames'
+            };
+            
+            label.textContent = labels[key] || key;
+            container.appendChild(label);
+            
+            const input = document.createElement('input');
+            
+            if (key === 'dwell_time') {
+                input.type = 'number';
+                input.step = '0.5';
+                input.min = '0.5';
+                input.max = '10';
+                input.title = 'Minimum time person must stay in ROI to trigger (seconds)';
+            } else if (key === 'height_m') {
+                input.type = 'number';
+                input.step = '0.1';
+                input.min = '0.1';
+                input.max = '2.0';
+                input.title = 'Minimum height to trigger detection (meters)';
+            } else if (key === 'iou_threshold') {
+                input.type = 'number';
+                input.step = '0.01';
+                input.min = '0.01';
+                input.max = '1.0';
+                input.title = 'Intersection Over Union threshold for detection matching';
+            } else if (key === 'consecutive_frames') {
+                input.type = 'number';
+                input.step = '1';
+                input.min = '1';
+                input.max = '10';
+                input.title = 'Number of consecutive frames required for detection';
+            } else {
+                input.type = typeof value === 'number' ? 'number' : 'text';
+            }
+            
+            input.className = 'field-input';
+            input.value = value;
+            input.setAttribute('data-section', section);
+            input.setAttribute('data-key', key);
+            input.setAttribute('data-type', 'simple');
+            container.appendChild(input);
+
+            const helpText = document.createElement('div');
+            helpText.className = 'help-text';
+            
+            const helpMessages = {
+                'dwell_time': 'Min. seconds person must stay in ROI',
+                'height_m': 'Min. height to trigger detection',
+                'iou_threshold': 'IOU threshold for detection matching',
+                'consecutive_frames': 'Frames needed for stable detection'
+            };
+            
+            helpText.textContent = helpMessages[key] || '';
+            container.appendChild(helpText);
+        }
+
+        function renderClassesTrigger(container, section, key, classes) {
+            const label = document.createElement('div');
+            label.className = 'field-label';
+            label.textContent = 'Detection Classes';
+            label.style.marginBottom = '10px';
+            container.appendChild(label);
+
+            const classesContainer = document.createElement('div');
+            classesContainer.id = 'classesContainer';
+            classesContainer.style.marginBottom = '10px';
+            
+            classes.forEach((className, index) => {
+                const classTag = document.createElement('div');
+                classTag.className = 'array-item';
+                
+                const classInput = document.createElement('input');
+                classInput.type = 'text';
+                classInput.className = 'array-input';
+                classInput.value = className;
+                classInput.setAttribute('data-section', section);
+                classInput.setAttribute('data-key', key);
+                classInput.setAttribute('data-index', index);
+                classInput.setAttribute('data-type', 'array');
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.textContent = 'Remove';
+                removeBtn.onclick = function() {
+                    classTag.remove();
+                };
+                
+                classTag.appendChild(classInput);
+                classTag.appendChild(removeBtn);
+                classesContainer.appendChild(classTag);
+            });
+            
+            container.appendChild(classesContainer);
+
+            const addClassContainer = document.createElement('div');
+            addClassContainer.style.display = 'flex';
+            addClassContainer.style.gap = '10px';
+            addClassContainer.style.marginTop = '10px';
+            
+            const newClassInput = document.createElement('input');
+            newClassInput.type = 'text';
+            newClassInput.placeholder = 'Add new class (e.g., person, car)';
+            newClassInput.style.flex = '1';
+            newClassInput.id = 'newClassInput';
+            newClassInput.className = 'field-input';
+            
+            const addBtn = document.createElement('button');
+            addBtn.className = 'add-btn';
+            addBtn.textContent = 'Add Class';
+            addBtn.onclick = function() {
+                const newClass = newClassInput.value.trim();
+                if (newClass) {
+                    const newClassTag = document.createElement('div');
+                    newClassTag.className = 'array-item';
+                    
+                    const newClassInputField = document.createElement('input');
+                    newClassInputField.type = 'text';
+                    newClassInputField.className = 'array-input';
+                    newClassInputField.value = newClass;
+                    newClassInputField.setAttribute('data-section', section);
+                    newClassInputField.setAttribute('data-key', key);
+                    newClassInputField.setAttribute('data-index', classesContainer.children.length);
+                    newClassInputField.setAttribute('data-type', 'array');
+                    
+                    const newRemoveBtn = document.createElement('button');
+                    newRemoveBtn.className = 'remove-btn';
+                    newRemoveBtn.textContent = 'Remove';
+                    newRemoveBtn.onclick = function() {
+                        newClassTag.remove();
+                    };
+                    
+                    newClassTag.appendChild(newClassInputField);
+                    newClassTag.appendChild(newRemoveBtn);
+                    classesContainer.appendChild(newClassTag);
+                    
+                    newClassInput.value = '';
+                }
+            };
+            
+            addClassContainer.appendChild(newClassInput);
+            addClassContainer.appendChild(addBtn);
+            container.appendChild(addClassContainer);
+
+            const helpText = document.createElement('div');
+            helpText.className = 'help-text';
+            helpText.textContent = 'Object classes that will trigger detection events';
+            container.appendChild(helpText);
+        }
+
+        function renderSimpleField(container, section, key, value) {
+            const fieldRow = document.createElement('div');
+            fieldRow.className = 'field-row';
+            
+            const label = document.createElement('div');
+            label.className = 'field-label';
+            label.textContent = key.replace(/_/g, ' ');
+            fieldRow.appendChild(label);
+            
+            let input;
+            
+            if (typeof value === 'boolean') {
+                const checkboxContainer = document.createElement('div');
+                checkboxContainer.className = 'checkbox-field';
+                
+                input = document.createElement('input');
+                input.type = 'checkbox';
+                input.checked = value;
+                input.setAttribute('data-section', section);
+                input.setAttribute('data-key', key);
+                input.setAttribute('data-type', 'simple');
+                
+                checkboxContainer.appendChild(input);
+                
+                const checkboxLabel = document.createElement('span');
+                checkboxLabel.textContent = value ? 'Enabled' : 'Disabled';
+                checkboxContainer.appendChild(checkboxLabel);
+                
+                fieldRow.appendChild(checkboxContainer);
+            } else {
+                input = document.createElement('input');
+                input.type = typeof value === 'number' ? 'number' : 'text';
+                input.className = 'field-input';
+                input.value = value;
+                input.setAttribute('data-section', section);
+                input.setAttribute('data-key', key);
+                input.setAttribute('data-type', 'simple');
+                fieldRow.appendChild(input);
+            }
+            
+            container.appendChild(fieldRow);
+        }
+
+        function renderArrayField(container, section, key, array) {
+            const fieldRow = document.createElement('div');
+            fieldRow.className = 'field-row';
+            
+            const label = document.createElement('div');
+            label.className = 'field-label';
+            label.textContent = key.replace(/_/g, ' ');
+            fieldRow.appendChild(label);
+            
+            const arrayContainer = document.createElement('div');
+            arrayContainer.style.flex = '1';
+            
+            array.forEach((item, index) => {
+                const arrayItem = document.createElement('div');
+                arrayItem.className = 'array-item';
+                
+                const input = document.createElement('input');
+                input.type = typeof item === 'number' ? 'number' : 'text';
+                input.className = 'array-input';
+                input.value = item;
+                input.setAttribute('data-section', section);
+                input.setAttribute('data-key', key);
+                input.setAttribute('data-index', index);
+                input.setAttribute('data-type', 'array');
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.textContent = 'Remove';
+                removeBtn.onclick = function() {
+                    arrayItem.remove();
+                };
+                
+                arrayItem.appendChild(input);
+                arrayItem.appendChild(removeBtn);
+                arrayContainer.appendChild(arrayItem);
+            });
+            
+            const addBtn = document.createElement('button');
+            addBtn.className = 'add-btn';
+            addBtn.textContent = 'Add Item';
+            addBtn.onclick = function() {
+                const newItem = document.createElement('div');
+                newItem.className = 'array-item';
+                
+                const newInput = document.createElement('input');
+                newInput.type = 'text';
+                newInput.className = 'array-input';
+                newInput.value = '';
+                newInput.setAttribute('data-section', section);
+                newInput.setAttribute('data-key', key);
+                newInput.setAttribute('data-index', arrayContainer.children.length);
+                newInput.setAttribute('data-type', 'array');
+                
+                const newRemoveBtn = document.createElement('button');
+                newRemoveBtn.className = 'remove-btn';
+                newRemoveBtn.textContent = 'Remove';
+                newRemoveBtn.onclick = function() {
+                    newItem.remove();
+                };
+                
+                newItem.appendChild(newInput);
+                newItem.appendChild(newRemoveBtn);
+                arrayContainer.appendChild(newItem);
+            };
+
+            fieldRow.appendChild(arrayContainer);
+            container.appendChild(fieldRow);
+            container.appendChild(addBtn);
+        }
+
+        function renderNestedObject(container, section, key, nestedObject) {
+            const fieldRow = document.createElement('div');
+            fieldRow.className = 'field-row';
+            
+            const label = document.createElement('div');
+            label.className = 'field-label';
+            label.textContent = key.replace(/_/g, ' ');
+            fieldRow.appendChild(label);
+            
+            const nestedContainer = document.createElement('div');
+            nestedContainer.style.flex = '1';
+            
+            const nestedSection = document.createElement('div');
+            nestedSection.className = 'nested-section';
+            
+            for (const [nestedKey, nestedValue] of Object.entries(nestedObject)) {
+                if (Array.isArray(nestedValue)) {
+                    renderArrayField(nestedSection, `${section}.${key}`, nestedKey, nestedValue);
+                } else if (typeof nestedValue === 'object' && nestedValue !== null) {
+                    renderNestedObject(nestedSection, `${section}.${key}`, nestedKey, nestedValue);
+                } else {
+                    renderSimpleField(nestedSection, `${section}.${key}`, nestedKey, nestedValue);
+                }
+            }
+            
+            nestedContainer.appendChild(nestedSection);
+            fieldRow.appendChild(nestedContainer);
+            container.appendChild(fieldRow);
+        }
+
+        function renderROISection(container, sectionName, rois) {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'section';
+            
+            const title = document.createElement('div');
+            title.className = 'section-title';
+            title.textContent = 'ROIs';
+            title.innerHTML += ' <span style="font-size: 12px; color: #6c757d;">(Regions of Interest)</span>';
+            sectionDiv.appendChild(title);
+
+            if (rois.length === 0) {
+                const noRois = document.createElement('div');
+                noRois.className = 'field-group';
+                noRois.style.textAlign = 'center';
+                noRois.style.color = '#6c757d';
+                noRois.style.fontStyle = 'italic';
+                noRois.textContent = 'No ROIs defined. Use the ROI Editor to create regions.';
+                sectionDiv.appendChild(noRois);
+            } else {
+                rois.forEach((roi, index) => {
+                    const roiGroup = document.createElement('div');
+                    roiGroup.className = 'field-group';
+                    
+                    const roiHeader = document.createElement('div');
+                    roiHeader.style.fontWeight = 'bold';
+                    roiHeader.style.marginBottom = '10px';
+                    roiHeader.textContent = `ROI ${index + 1}`;
+                    roiGroup.appendChild(roiHeader);
+                    
+                    // Add ROI properties
+                    for (const [key, value] of Object.entries(roi)) {
+                        if (key === 'points') continue; // Skip points array for now
+                        
+                        const propRow = document.createElement('div');
+                        propRow.className = 'field-row';
+                        
+                        const label = document.createElement('div');
+                        label.className = 'field-label';
+                        label.textContent = key;
+                        propRow.appendChild(label);
+                        
+                        let input;
+                        if (typeof value === 'boolean') {
+                            const checkboxContainer = document.createElement('div');
+                            checkboxContainer.className = 'checkbox-field';
+                            
+                            input = document.createElement('input');
+                            input.type = 'checkbox';
+                            input.checked = value;
+                            input.setAttribute('data-section', sectionName);
+                            input.setAttribute('data-key', `${index}.${key}`);
+                            input.setAttribute('data-type', 'simple');
+                            
+                            checkboxContainer.appendChild(input);
+                            
+                            const checkboxLabel = document.createElement('span');
+                            checkboxLabel.textContent = value ? 'Enabled' : 'Disabled';
+                            checkboxContainer.appendChild(checkboxLabel);
+                            
+                            propRow.appendChild(checkboxContainer);
+                        } else {
+                            input = document.createElement('input');
+                            input.type = typeof value === 'number' ? 'number' : 'text';
+                            input.className = 'field-input';
+                            input.value = value;
+                            input.setAttribute('data-section', sectionName);
+                            input.setAttribute('data-key', `${index}.${key}`);
+                            input.setAttribute('data-type', 'simple');
+                            propRow.appendChild(input);
+                        }
+                        
+                        roiGroup.appendChild(propRow);
+                    }
+                    
+                    sectionDiv.appendChild(roiGroup);
+                });
+            }
+            
+            container.appendChild(sectionDiv);
+        }
+
+        function saveConfig() {
+            const statusText = document.getElementById('statusText');
+            statusText.textContent = 'Saving configuration...';
+            statusText.style.color = 'blue';
+
+            // Collect all form data
+            const formData = collectFormData();
+
+            fetch('/update_config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                statusText.textContent = 'Configuration saved successfully!';
+                statusText.style.color = 'green';
+                console.log('Save response:', data);
+            })
+            .catch(error => {
+                console.error('Error saving config:', error);
+                statusText.textContent = 'Error saving configuration: ' + error.message;
+                statusText.style.color = 'red';
+            });
+        }
+
+        function collectFormData() {
+            const config = {};
+            
+            // Collect all simple inputs
+            document.querySelectorAll('input[data-type="simple"]').forEach(input => {
+                const section = input.getAttribute('data-section');
+                const key = input.getAttribute('data-key');
+                
+                if (!config[section]) config[section] = {};
+                
+                if (input.type === 'checkbox') {
+                    config[section][key] = input.checked;
+                } else if (input.type === 'number') {
+                    config[section][key] = parseFloat(input.value) || 0;
+                } else {
+                    config[section][key] = input.value;
+                }
+            });
+            
+            // Collect array inputs
+            document.querySelectorAll('input[data-type="array"]').forEach(input => {
+                const section = input.getAttribute('data-section');
+                const key = input.getAttribute('data-key');
+                
+                if (!config[section]) config[section] = {};
+                if (!config[section][key]) config[section][key] = [];
+                
+                if (input.value.trim() !== '') {
+                    config[section][key].push(input.value);
+                }
+            });
+            
+            return config;
+        }
+
+        // Add input event listeners for better UX
+        document.addEventListener('input', function(e) {
+            if (e.target.type === 'checkbox') {
+                const label = e.target.parentElement.querySelector('span');
+                if (label) {
+                    label.textContent = e.target.checked ? 'Enabled' : 'Disabled';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
