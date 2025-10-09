@@ -18,7 +18,7 @@ class Inference:
         boxes = res.boxes.xyxy.cpu().numpy() if hasattr(res.boxes.xyxy, 'cpu') else np.array(res.boxes.xyxy)
         classes = res.boxes.cls.cpu().numpy().astype(int) if hasattr(res.boxes.cls, 'cpu') else np.array(res.boxes.cls).astype(int)
         confs = res.boxes.conf.cpu().numpy() if hasattr(res.boxes.conf, 'cpu') else np.array(res.boxes.conf)
-        print(confs)
+        #print(confs)
         detections = []
         for i, b in enumerate(boxes):
             x1, y1, x2, y2 = b.astype(int)

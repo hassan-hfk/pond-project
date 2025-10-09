@@ -1,0 +1,4 @@
+fps=25
+class=nutria
+timestamp=20251007_182835
+size=640x640

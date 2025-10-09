@@ -82,7 +82,7 @@ def generate_frame():
         while True:
             start_time = time.time()
             frame_count += 1
-            print(f"Frame {frame_count} - detection_active: {detection_active}")
+            #print(f"Frame {frame_count} - detection_active: {detection_active}")
             
             ret, frame = picam2.read()
             if not ret:
@@ -99,7 +99,7 @@ def generate_frame():
                 with open(CONFIG_PATH, 'r') as f:
                     cfg = yaml.safe_load(f)
                 
-                print("Detection ACTIVE - Running detection logic")
+                #print("Detection ACTIVE - Running detection logic")
                 
                 # Manual test trigger
                 if cv2.waitKey(1) & 0xFF == ord('r'):
@@ -171,9 +171,9 @@ def generate_frame():
                 
             else:
                 # When detection is inactive, just show plain video
-                print("Detection INACTIVE - Showing plain video")
+                #print("Detection INACTIVE - Showing plain video")
                 overlay = frame.copy()
-                cv2.putText(overlay, "DETECTION INACTIVE - Press Start Detection", 
+                cv2.putText(overlay, "DETECTION INACTIVE", 
                            (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
             # ALWAYS show the video feed and yield frames
