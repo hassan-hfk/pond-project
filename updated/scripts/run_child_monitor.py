@@ -56,8 +56,13 @@ def generate_frame():
     
     last_event_time = {}
     cooldown = 15
-    picam2 = cv2.VideoCapture(cam_dev)
-    
+    #picam2 = cv2.VideoCapture(cam_dev)
+    picam2 = Picamera2()
+    camera_config = picam2.create_preview_configuration(main={"size": (2460, 2460)})
+    camera_config["transform"] = Transform(vflip=1)
+    picam2.configure(camera_config)
+    picam2.start()
+
     log_file = LOGS_PATH / cfg['logging'].get('events_file', 'events.log')
     logf = open(log_file, 'a')
 
@@ -83,8 +88,8 @@ def generate_frame():
             start_time = time.time()
             frame_count += 1
             #print(f"Frame {frame_count} - detection_active: {detection_active}")
-            
-            ret, frame = picam2.read()
+            ret = 1
+            frame = picam2.capture_array()
             if not ret:
                 continue
                 
