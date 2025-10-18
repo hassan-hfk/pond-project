@@ -1,0 +1,48 @@
+calibration:
+  depth_scale: ''
+  focal_px: 60.0
+  img_size:
+  - 640
+  - 640
+  ref_box_norm:
+  - 0.1338623046875
+  - 0.23828125
+  - 0.6916748046875
+  - 0.70703125
+  ref_distance_m: 1.0
+  ref_height_m: 5.0
+  vertical_vp:
+  - 388.66890764094956
+  - 12064.004451038576
+camera:
+  backend: auto  # Options: "opencv", "picamera2", "auto"
+  device: 0
+  fps: 25
+  height: 640
+  width: 640
+gpio:
+  active_high: true
+  enabled: true
+  pin: 17
+logging:
+  events_file: events.log
+model:
+  conf_thresh: 0.8
+  yolov8_path: models/best.pt
+rois:
+- - - 0.046875
+    - 0.14921875
+  - - 0.3515625
+    - 0.21640625
+  - - 0.465625
+    - 0.62578125
+  - - 0.153125
+    - 0.68984375
+  - - 0.059375
+    - 0.45703125
+thresholds:
+  classes_trigger:
+  - person
+  dwell_time: 2
+  height_m: 10
+  iou_threshold: 0.002

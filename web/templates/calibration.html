@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calibration - Detection System</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .container {
+        display: flex;
+        height: 100vh;
+      }
+
+      .sidebar {
+        width: 200px;
+        background-color: #2c3e50;
+        padding: 20px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .sidebar-btn {
+        width: 160px;
+        padding: 15px 20px;
+        margin: 10px 0;
+        background-color: #34495e;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+      }
+
+      .sidebar-btn:hover {
+        background-color: #1abc9c;
+      }
+
+      .sidebar-btn.active {
+        background-color: #1abc9c;
+      }
+
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        overflow-y: auto;
+      }
+
+      .calibration-header {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      }
+
+      .calibration-header h2 {
+        color: #2c3e50;
+        margin-bottom: 10px;
+      }
+
+      .step-indicator {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+        padding: 15px;
+        background: #ecf0f1;
+        border-radius: 5px;
+      }
+
+      .step {
+        flex: 1;
+        text-align: center;
+        padding: 10px;
+        border-radius: 5px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .step.active {
+        background: #3498db;
+        color: white;
+      }
+
+      .step.completed {
+        background: #27ae60;
+        color: white;
+      }
+
+      .calibration-workspace {
+        display: flex;
+        gap: 20px;
+        flex: 1;
+      }
+
+      .video-section {
+        flex: 2;
+        background: #000;
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .video-section canvas {
+        max-width: 100%;
+        max-height: 100%;
+        cursor: crosshair;
+      }
+
+      .instructions-section {
+        flex: 1;
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        overflow-y: auto;
+      }
+
+      .instruction-box {
+        display: none;
+        animation: fadeIn 0.3s;
+      }
+
+      .instruction-box.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .instruction-title {
+        color: #3498db;
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 15px;
+      }
+
+      .instruction-text {
+        color: #2c3e50;
+        line-height: 1.6;
+        margin-bottom: 15px;
+      }
+
+      .instruction-list {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        border-left: 4px solid #3498db;
+        margin: 15px 0;
+      }
+
+      .instruction-list li {
+        margin: 8px 0;
+        color: #2c3e50;
+      }
+
+      .input-group {
+        margin: 15px 0;
+      }
+
+      .input-group label {
+        display: block;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 5px;
+      }
+
+      .input-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .btn {
+        flex: 1;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .btn-primary {
+        background: #3498db;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #2980b9;
+      }
+
+      .btn-success {
+        background: #27ae60;
+        color: white;
+      }
+
+      .btn-success:hover {
+        background: #229954;
+      }
+
+      .btn-danger {
+        background: #e74c3c;
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background: #c0392b;
+      }
+
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .status-message {
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 10px;
+        font-weight: bold;
+      }
+
+      .status-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .status-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .status-info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+
+      .calibration-preview {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-top: 15px;
+      }
+
+      .preview-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .preview-label {
+        font-weight: bold;
+        color: #6c757d;
+      }
+
+      .preview-value {
+        color: #2c3e50;
+      }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+        <button class="sidebar-btn" onclick="window.location.href='/'">Detection</button>
+        <button class="sidebar-btn" onclick="window.location.href='/roi_editor'">ROI Editor</button>
+        <button class="sidebar-btn active" onclick="window.location.href='/config_editor'">Config Editor</button>
+        <button class="sidebar-btn" onclick="window.location.href='/?showEventList=true'">Event List</button>
+        <button class="sidebar-btn" onclick="window.location.href='/calibration'">Calibration</button>
+        <button class="sidebar-btn">Settings</button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="calibration-header">
+                <h2>📐 Camera Calibration</h2>
+                <p style="color: #6c757d;">Follow the steps to calibrate your camera for accurate height detection</p>
+                
+                <!-- Step Indicator -->
+                <div class="step-indicator">
+                    <div class="step active" id="step1-indicator" onclick="goToStep(1)">
+                        1. Reference Box
+                    </div>
+                    <div class="step" id="step2-indicator" onclick="goToStep(2)">
+                        2. Measurements
+                    </div>
+                    <div class="step" id="step3-indicator" onclick="goToStep(3)">
+                        3. Vanishing Point
+                    </div>
+                    <div class="step" id="step4-indicator" onclick="goToStep(4)">
+                        4. Finish
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workspace -->
+            <div class="calibration-workspace">
+                <!-- Video Section -->
+                <div class="video-section">
+                    <canvas id="calibrationCanvas"></canvas>
+                </div>
+
+                <!-- Instructions Section -->
+                <div class="instructions-section">
+                    <!-- Step 1: Reference Box -->
+                    <div class="instruction-box active" id="step1">
+                        <div class="instruction-title">Step 1: Draw Reference Box</div>
+                        <div class="instruction-text">
+                            Draw a box around an object with known height (e.g., a person, door frame, or meter stick).
+                        </div>
+                        <div class="instruction-list">
+                            <strong>Instructions:</strong>
+                            <ul>
+                                <li>Click and drag on the video to draw a rectangle</li>
+                                <li>Ensure the box fits tightly around the object</li>
+                                <li>The object should have a known height</li>
+                            </ul>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-danger" onclick="resetBox()">Reset Box</button>
+                            <button class="btn btn-primary" id="nextStep1" onclick="nextStep()" disabled>Next Step</button>
+                        </div>
+                        <div id="status1"></div>
+                    </div>
+
+                    <!-- Step 2: Enter Measurements -->
+                    <div class="instruction-box" id="step2">
+                        <div class="instruction-title">Step 2: Enter Measurements</div>
+                        <div class="instruction-text">
+                            Provide the real-world measurements for the reference object.
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="refHeight">Object Height (meters):</label>
+                            <input type="number" id="refHeight" step="0.01" min="0.1" max="3.0" placeholder="e.g., 1.75">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="refDistance">Distance from Camera (meters):</label>
+                            <input type="number" id="refDistance" step="0.1" min="0.5" max="20" placeholder="e.g., 3.5">
+                        </div>
+
+                        <div class="calibration-preview">
+                            <div class="preview-item">
+                                <span class="preview-label">Reference Box Height (pixels):</span>
+                                <span class="preview-value" id="boxHeightPx">-</span>
+                            </div>
+                            <div class="preview-item">
+                                <span class="preview-label">Computed Focal Length:</span>
+                                <span class="preview-value" id="focalLength">-</span>
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn btn-danger" onclick="previousStep()">Back</button>
+                            <button class="btn btn-primary" id="nextStep2" onclick="nextStep()">Next Step</button>
+                        </div>
+                        <div id="status2"></div>
+                    </div>
+
+                    <!-- Step 3: Vanishing Point -->
+                    <div class="instruction-box" id="step3">
+                        <div class="instruction-title">Step 3: Mark Vertical Lines</div>
+                        <div class="instruction-text">
+                            Click 4 points to define 2 vertical parallel lines (e.g., door frames, building edges).
+                        </div>
+                        <div class="instruction-list">
+                            <strong>Instructions:</strong>
+                            <ul>
+                                <li>Click 2 points to define the first vertical line</li>
+                                <li>Click 2 more points for the second vertical line</li>
+                                <li>Lines should be parallel in the real world</li>
+                                <li>Total: 4 clicks needed</li>
+                            </ul>
+                        </div>
+                        <div class="calibration-preview">
+                            <div class="preview-item">
+                                <span class="preview-label">Points Marked:</span>
+                                <span class="preview-value" id="vpPointsCount">0 / 4</span>
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-danger" onclick="previousStep()">Back</button>
+                            <button class="btn btn-danger" onclick="resetVPPoints()">Reset Points</button>
+                            <button class="btn btn-primary" id="nextStep3" onclick="nextStep()" disabled>Next Step</button>
+                        </div>
+                        <div id="status3"></div>
+                    </div>
+
+                    <!-- Step 4: Finish -->
+                    <div class="instruction-box" id="step4">
+                        <div class="instruction-title">Step 4: Review & Save</div>
+                        <div class="instruction-text">
+                            Review your calibration and save to config.
+                        </div>
+                        
+                        <div class="calibration-preview">
+                            <div class="preview-item">
+                                <span class="preview-label">Reference Height:</span>
+                                <span class="preview-value" id="finalRefHeight">-</span>
+                            </div>
+                            <div class="preview-item">
+                                <span class="preview-label">Reference Distance:</span>
+                                <span class="preview-value" id="finalRefDist">-</span>
+                            </div>
+                            <div class="preview-item">
+                                <span class="preview-label">Focal Length (px):</span>
+                                <span class="preview-value" id="finalFocal">-</span>
+                            </div>
+                            <div class="preview-item">
+                                <span class="preview-label">Vanishing Point:</span>
+                                <span class="preview-value" id="finalVP">-</span>
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn btn-danger" onclick="previousStep()">Back</button>
+                            <button class="btn btn-success" onclick="saveCalibration()">💾 Save Calibration</button>
+                        </div>
+                        <div id="status4"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Canvas and video stream setup
+        const canvas = document.getElementById('calibrationCanvas');
+        const ctx = canvas.getContext('2d');
+        let videoStream = null;
+        let currentStep = 1;
+        
+        // Calibration state
+        let refBox = null;
+        let isDrawing = false;
+        let startPoint = null;
+        let vpPoints = [];
+        
+        let refHeight = null;
+        let refDistance = null;
+        let focalLength = null;
+        let vanishingPoint = null;
+
+        // Initialize
+        window.addEventListener('load', () => {
+            startVideoStream();
+            setupEventListeners();
+        });
+
+        function startVideoStream() {
+            const img = new Image();
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                requestAnimationFrame(() => updateVideoFrame(img));
+            };
+            img.src = '/calibration_feed?' + new Date().getTime();
+        }
+
+        function updateVideoFrame(img) {
+            img.src = '/calibration_feed?' + new Date().getTime();
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0);
+                drawOverlays();
+                requestAnimationFrame(() => updateVideoFrame(img));
+            };
+        }
+
+        function setupEventListeners() {
+            canvas.addEventListener('mousedown', handleMouseDown);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mouseup', handleMouseUp);
+            
+            document.getElementById('refHeight').addEventListener('input', updateMeasurements);
+            document.getElementById('refDistance').addEventListener('input', updateMeasurements);
+        }
+
+        function handleMouseDown(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            if (currentStep === 1) {
+                isDrawing = true;
+                startPoint = { x, y };
+            } else if (currentStep === 3) {
+                vpPoints.push({ x, y });
+                document.getElementById('vpPointsCount').textContent = `${vpPoints.length} / 4`;
+                
+                if (vpPoints.length === 4) {
+                    document.getElementById('nextStep3').disabled = false;
+                    computeVanishingPoint();
+                }
+            }
+        }
+
+        function handleMouseMove(e) {
+            if (!isDrawing || currentStep !== 1) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            refBox = {
+                x: Math.min(startPoint.x, x),
+                y: Math.min(startPoint.y, y),
+                width: Math.abs(x - startPoint.x),
+                height: Math.abs(y - startPoint.y)
+            };
+        }
+
+        function handleMouseUp(e) {
+            if (currentStep === 1 && isDrawing) {
+                isDrawing = false;
+                if (refBox && refBox.width > 10 && refBox.height > 10) {
+                    document.getElementById('nextStep1').disabled = false;
+                    showStatus('status1', 'Reference box drawn! Click Next Step to continue.', 'success');
+                }
+            }
+        }
+
+        function drawOverlays() {
+            // Draw reference box
+            if (refBox) {
+                ctx.strokeStyle = '#00ff00';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(refBox.x, refBox.y, refBox.width, refBox.height);
+            }
+            
+            // Draw VP points
+            if (currentStep === 3 && vpPoints.length > 0) {
+                ctx.fillStyle = '#ff0000';
+                vpPoints.forEach((point, index) => {
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, 5, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    // Draw lines
+                    if (index === 1) {
+                        ctx.strokeStyle = '#00ff00';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(vpPoints[0].x, vpPoints[0].y);
+                        ctx.lineTo(vpPoints[1].x, vpPoints[1].y);
+                        ctx.stroke();
+                    } else if (index === 3) {
+                        ctx.strokeStyle = '#0000ff';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(vpPoints[2].x, vpPoints[2].y);
+                        ctx.lineTo(vpPoints[3].x, vpPoints[3].y);
+                        ctx.stroke();
+                    }
+                });
+            }
+        }
+
+        function updateMeasurements() {
+            refHeight = parseFloat(document.getElementById('refHeight').value);
+            refDistance = parseFloat(document.getElementById('refDistance').value);
+            
+            if (refHeight && refDistance && refBox) {
+                const boxHeightPx = refBox.height;
+                focalLength = (boxHeightPx * refDistance) / refHeight;
+                
+                document.getElementById('boxHeightPx').textContent = boxHeightPx.toFixed(2) + ' px';
+                document.getElementById('focalLength').textContent = focalLength.toFixed(2) + ' px';
+            }
+        }
+
+        function computeVanishingPoint() {
+            // Compute intersection of two lines
+            const line1 = getLineEquation(vpPoints[0], vpPoints[1]);
+            const line2 = getLineEquation(vpPoints[2], vpPoints[3]);
+            
+            const vp = getIntersection(line1, line2);
+            vanishingPoint = vp;
+            
+            showStatus('status3', `Vanishing point computed at (${vp.x.toFixed(0)}, ${vp.y.toFixed(0)})`, 'success');
+        }
+
+        function getLineEquation(p1, p2) {
+            const a = p2.y - p1.y;
+            const b = p1.x - p2.x;
+            const c = a * p1.x + b * p1.y;
+            return { a, b, c };
+        }
+
+        function getIntersection(line1, line2) {
+            const det = line1.a * line2.b - line2.a * line1.b;
+            if (Math.abs(det) < 1e-10) return null;
+            
+            const x = (line2.b * line1.c - line1.b * line2.c) / det;
+            const y = (line1.a * line2.c - line2.a * line1.c) / det;
+            return { x, y };
+        }
+
+        function nextStep() {
+            if (currentStep === 1) {
+                if (!refBox) {
+                    showStatus('status1', 'Please draw a reference box first', 'error');
+                    return;
+                }
+            } else if (currentStep === 2) {
+                if (!refHeight || !refDistance) {
+                    showStatus('status2', 'Please enter both measurements', 'error');
+                    return;
+                }
+            } else if (currentStep === 3) {
+                if (vpPoints.length !== 4) {
+                    showStatus('status3', 'Please mark all 4 points', 'error');
+                    return;
+                }
+            }
+            
+            currentStep++;
+            updateStepUI();
+        }
+
+        function previousStep() {
+            currentStep--;
+            updateStepUI();
+        }
+
+        function goToStep(step) {
+            // Allow going back, but not forward without completing steps
+            if (step <= currentStep || step === 1) {
+                currentStep = step;
+                updateStepUI();
+            }
+        }
+
+        function updateStepUI() {
+            // Hide all steps
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById(`step${i}`).classList.remove('active');
+                document.getElementById(`step${i}-indicator`).classList.remove('active', 'completed');
+            }
+            
+            // Show current step
+            document.getElementById(`step${currentStep}`).classList.add('active');
+            document.getElementById(`step${currentStep}-indicator`).classList.add('active');
+            
+            // Mark completed steps
+            for (let i = 1; i < currentStep; i++) {
+                document.getElementById(`step${i}-indicator`).classList.add('completed');
+            }
+            
+            // Update final preview
+            if (currentStep === 4) {
+                document.getElementById('finalRefHeight').textContent = refHeight ? refHeight.toFixed(2) + ' m' : '-';
+                document.getElementById('finalRefDist').textContent = refDistance ? refDistance.toFixed(2) + ' m' : '-';
+                document.getElementById('finalFocal').textContent = focalLength ? focalLength.toFixed(2) + ' px' : '-';
+                document.getElementById('finalVP').textContent = vanishingPoint ? 
+                    `(${vanishingPoint.x.toFixed(0)}, ${vanishingPoint.y.toFixed(0)})` : '-';
+            }
+        }
+
+        function resetBox() {
+            refBox = null;
+            document.getElementById('nextStep1').disabled = true;
+            showStatus('status1', 'Reference box cleared. Draw a new box.', 'info');
+        }
+
+        function resetVPPoints() {
+            vpPoints = [];
+            document.getElementById('vpPointsCount').textContent = '0 / 4';
+            document.getElementById('nextStep3').disabled = true;
+            showStatus('status3', 'Points cleared. Mark 4 new points.', 'info');
+        }
+
+        function saveCalibration() {
+            const calibrationData = {
+                ref_box_norm: [
+                    refBox.x / canvas.width,
+                    refBox.y / canvas.height,
+                    (refBox.x + refBox.width) / canvas.width,
+                    (refBox.y + refBox.height) / canvas.height
+                ],
+                ref_height_m: refHeight,
+                ref_distance_m: refDistance,
+                focal_px: focalLength,
+                vertical_vp: vanishingPoint ? [vanishingPoint.x, vanishingPoint.y] : null,
+                img_size: [canvas.width, canvas.height]
+            };
+            
+            fetch('/save_calibration', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(calibrationData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showStatus('status4', '✅ Calibration saved successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    showStatus('status4', '❌ Error: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showStatus('status4', '❌ Failed to save calibration', 'error');
+            });
+        }
+
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status-message status-${type}">${message}</div>`;
+        }
+    </script>
+</body>
+</html>
