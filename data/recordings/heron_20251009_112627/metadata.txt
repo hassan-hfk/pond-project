@@ -1,4 +1,0 @@
-fps=25
-class=heron
-timestamp=20251009_112627
-size=640x640

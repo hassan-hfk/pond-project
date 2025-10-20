@@ -1,4 +1,0 @@
-fps=25
-class=person
-timestamp=20251009_112718
-size=640x640

@@ -1,4 +1,0 @@
-fps=25
-class=cat
-timestamp=20251009_112642
-size=640x640

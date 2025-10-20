@@ -167,6 +167,143 @@ def get_confidence():
         print(f"Error reading confidence: {e}")
         return jsonify({'confidence': 0.45})
 
+@app.route('/update_config', methods=['POST'])
+def update_config():
+    """Handle config updates from config editor - PROTECTS ROIs"""
+    try:
+        data = request.get_json()
+        print(f"[CONFIG] Received update request")
+        
+        # Load current config
+        with open(CONFIG_PATH, 'r') as f:
+            cfg = yaml.safe_load(f)
+        
+        # Store original ROIs - CRITICAL: Don't let form data overwrite ROIs
+        original_rois = cfg.get('rois', [])
+        print(f"[CONFIG] Protecting {len(original_rois)} ROIs from being overwritten")
+        
+        # Update with new values
+        for section, values in data.items():
+            # Skip ROIs - they should only be edited via ROI Editor
+            if section == 'rois':
+                print("[CONFIG] Skipping ROIs update (use ROI Editor)")
+                continue
+                
+            if section in cfg:
+                if isinstance(values, dict) and isinstance(cfg[section], dict):
+                    cfg[section].update(values)
+                else:
+                    cfg[section] = values
+            else:
+                cfg[section] = values
+        
+        # Restore original ROIs
+        cfg['rois'] = original_rois
+        
+        # Ensure critical fields have correct types
+        # Fix classes_trigger if it got corrupted
+        if 'thresholds' in cfg:
+            if 'classes_trigger' in cfg['thresholds']:
+                # Ensure it's a list
+                classes = cfg['thresholds']['classes_trigger']
+                if isinstance(classes, dict):
+                    # It got corrupted, fix it
+                    cfg['thresholds']['classes_trigger'] = ['person']
+                    print("[CONFIG] Fixed corrupted classes_trigger")
+                elif not isinstance(classes, list):
+                    cfg['thresholds']['classes_trigger'] = [str(classes)]
+        
+        # Create backup before saving
+        backup_path = CONFIG_PATH.parent / 'config.yaml.backup'
+        with open(backup_path, 'w') as f:
+            yaml.dump(cfg, f, default_flow_style=False, sort_keys=False)
+        print(f"[CONFIG] Backup created at {backup_path}")
+        
+        # Save updated config
+        with open(CONFIG_PATH, 'w') as f:
+            yaml.dump(cfg, f, default_flow_style=False, sort_keys=False)
+        
+        print("[CONFIG] ✅ Configuration saved successfully")
+        print(f"[CONFIG] ROIs preserved: {len(cfg.get('rois', []))} polygons")
+        
+        return jsonify({'status': 'success', 'message': 'Configuration saved successfully'})
+        
+    except Exception as e:
+        print(f"[CONFIG] ❌ Error saving config: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/save_full_config', methods=['POST'])
+def save_full_config():
+    """Save complete configuration - WITH ROI PROTECTION"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'config' not in data:
+            return jsonify({'status': 'error', 'message': 'No config data received'}), 400
+        
+        new_config = data.get('config', {})
+        
+        # Load original config
+        with open(CONFIG_PATH, 'r') as f:
+            original_config = yaml.safe_load(f)
+        
+        # CRITICAL: Preserve ROIs - they should only be edited via ROI Editor
+        original_rois = original_config.get('rois', [])
+        print(f"[CONFIG] Protecting {len(original_rois)} ROIs")
+        
+        # Update sections, but skip ROIs
+        for section, values in new_config.items():
+            if section == 'rois':
+                print("[CONFIG] Skipping ROIs (use ROI Editor to modify)")
+                continue
+                
+            if section in original_config:
+                if isinstance(values, dict) and isinstance(original_config[section], dict):
+                    original_config[section].update(values)
+                else:
+                    original_config[section] = values
+            else:
+                original_config[section] = values
+        
+        # Restore ROIs
+        original_config['rois'] = original_rois
+        
+        # Fix any corrupted data structures
+        if 'thresholds' in original_config:
+            # Ensure classes_trigger is a list
+            if 'classes_trigger' in original_config['thresholds']:
+                classes = original_config['thresholds']['classes_trigger']
+                if not isinstance(classes, list):
+                    if isinstance(classes, dict):
+                        # Corrupted - restore default
+                        original_config['thresholds']['classes_trigger'] = ['person']
+                        print("[CONFIG] Fixed corrupted classes_trigger")
+                    else:
+                        original_config['thresholds']['classes_trigger'] = [str(classes)]
+        
+        # Create backup
+        backup_path = CONFIG_PATH.parent / 'config.yaml.backup'
+        with open(backup_path, 'w') as f:
+            yaml.dump(original_config, f, default_flow_style=False, sort_keys=False)
+        
+        # Save updated config
+        with open(CONFIG_PATH, 'w') as f:
+            yaml.dump(original_config, f, default_flow_style=False, sort_keys=False)
+        
+        print("[CONFIG] ✅ Full configuration saved successfully")
+        print(f"[CONFIG] ROIs preserved: {len(original_config.get('rois', []))} polygons")
+        
+        return jsonify({'status': 'success', 'message': 'Configuration saved successfully'})
+        
+    except Exception as e:
+        print(f"[CONFIG] ❌ Error saving full config: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 @app.route('/update_confidence/<float:confidence>')
 def update_confidence(confidence):
     """Update confidence threshold in config.yaml"""
@@ -258,27 +395,6 @@ def get_full_config():
         print(f"Error reading full config: {e}")
         return jsonify({'config': {}})
 
-@app.route('/save_full_config', methods=['POST'])
-def save_full_config():
-    """Save complete configuration to config.yaml"""
-    try:
-        data = request.get_json()
-        new_config = data.get('config', {})
-        
-        with open(CONFIG_PATH, 'r') as f:
-            original_config = yaml.safe_load(f)
-        
-        updated_config = update_config_structure(original_config, new_config)
-        
-        with open(CONFIG_PATH, 'w') as f:
-            yaml.dump(updated_config, f, default_flow_style=False, sort_keys=False)
-        
-        print("✅ Full configuration saved successfully")
-        return jsonify({'status': 'success', 'message': 'Configuration saved successfully'})
-        
-    except Exception as e:
-        print(f"Error saving full config: {e}")
-        return jsonify({'status': 'error', 'message': str(e)})
 
 def update_config_structure(original, new):
     """Update original config structure with new values"""
