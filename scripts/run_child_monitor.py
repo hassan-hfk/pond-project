@@ -14,6 +14,7 @@ from inference import Inference
 from child_logic import ChildMonitor
 from db_handler import insert_detection
 from video_recorder import VideoRecorder
+from camera_manager import camera_manager
 
 # Define paths relative to project root
 CONFIG_PATH = project_root / 'config' / 'config.yaml'
@@ -25,18 +26,18 @@ detection_active = False
 def set_detection_status(status):
     global detection_active
     detection_active = status
+    print(f"[DETECTION] Status changed to: {detection_active}")
 
 def generate_frame():
     """Generate video frames with detection overlay"""
     print("generate_frame function called")
-    
+   
     with open(CONFIG_PATH, 'r') as f:
         cfg = yaml.safe_load(f)
 
     cam_w = int(cfg['camera']['width'])
     cam_h = int(cfg['camera']['height'])
     fps = int(cfg['camera'].get('fps', 25))
-    cam_dev = int(cfg['camera'].get('device', 0))
 
     inf = Inference(cfg)
     mon = ChildMonitor(str(CONFIG_PATH))
@@ -53,15 +54,12 @@ def generate_frame():
         post_secs=4,
         frame_size=(cam_w, cam_h)
     )
-    
+   
     last_event_time = {}
     cooldown = 15
-    #picam2 = cv2.VideoCapture(cam_dev)
-    picam2 = Picamera2()
-    camera_config = picam2.create_preview_configuration(main={"size": (2460, 2460)})
-    camera_config["transform"] = Transform(vflip=1)
-    picam2.configure(camera_config)
-    picam2.start()
+   
+    # Get camera from manager
+    camera = camera_manager.get_camera()
 
     log_file = LOGS_PATH / cfg['logging'].get('events_file', 'events.log')
     logf = open(log_file, 'a')
@@ -71,7 +69,7 @@ def generate_frame():
     midas_model = None
     midas_transform = None
     depth_scale = cfg.get('calibration', {}).get('depth_scale', None)
-    
+   
     if cfg.get('model', {}).get('use_midas', False):
         use_midas = True
         import torch
@@ -87,14 +85,12 @@ def generate_frame():
         while True:
             start_time = time.time()
             frame_count += 1
-            #print(f"Frame {frame_count} - detection_active: {detection_active}")
-            ret = 1
-            frame = picam2.capture_array()
+           
+            # Capture frame using camera manager
+            ret, frame = camera_manager.capture_frame()
             if not ret:
                 continue
-                
-            frame = cv2.resize(frame, (cam_w, cam_h))
-            frame = cv2.cvtColor(frame, cv2.BGR2R)
+    
             # ALWAYS update recorder buffer
             recorder.update(frame)
 
@@ -103,9 +99,7 @@ def generate_frame():
                 # Re-load config to get latest settings
                 with open(CONFIG_PATH, 'r') as f:
                     cfg = yaml.safe_load(f)
-                
-                #print("Detection ACTIVE - Running detection logic")
-                
+               
                 # Manual test trigger
                 if cv2.waitKey(1) & 0xFF == ord('r'):
                     print("[MANUAL] Triggered recording")
@@ -154,12 +148,12 @@ def generate_frame():
                     color = (0, 255, 0) if cls in mon.classes else (160, 160, 160)
                     cv2.rectangle(overlay, (x1, y1), (x2, y2), color, 2)
                     label = f"{cls} {conf:.2f}"
-                    cv2.putText(overlay, label, (x1, max(12, y1 - 6)), 
+                    cv2.putText(overlay, label, (x1, max(12, y1 - 6)),
                                cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 1)
 
                     h = d.get("height_m", None)
                     if h is not None:
-                        cv2.putText(overlay, f"H:{h:.2f}m", (x1, y1 - 22), 
+                        cv2.putText(overlay, f"H:{h:.2f}m", (x1, y1 - 22),
                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)
 
                     if d.get("in_roi", False):
@@ -167,25 +161,24 @@ def generate_frame():
                         cy = int(y2)
                         cv2.circle(overlay, (cx, cy), 5, (0, 0, 255), -1)
                         cnt = d.get("count", 0)
-                        cv2.putText(overlay, f"cnt:{cnt}", (x2 - 60, y2 + 15), 
+                        cv2.putText(overlay, f"cnt:{cnt}", (x2 - 60, y2 + 15),
                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
 
                 fps_display = 1.0 / (time.time() - start_time) if (time.time() - start_time) > 0 else 0
-                cv2.putText(overlay, f"FPS: {fps_display:.2f}", (cam_w - 120, 30), 
+                cv2.putText(overlay, f"FPS: {fps_display:.2f}", (cam_w - 120, 30),
                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                
+               
             else:
                 # When detection is inactive, just show plain video
-                #print("Detection INACTIVE - Showing plain video")
                 overlay = frame.copy()
-                cv2.putText(overlay, "DETECTION INACTIVE", 
+                cv2.putText(overlay, "DETECTION INACTIVE",
                            (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
             # ALWAYS show the video feed and yield frames
             #cv2.imshow("monitor", overlay)
             if cv2.waitKey(1) & 0xFF == 27:
                 break
-                
+               
             ret, overlay_encoded = cv2.imencode(".jpg", overlay)
             overlay_bytes = overlay_encoded.tobytes()
             yield (b'--frame\r\n'
@@ -198,4 +191,4 @@ def generate_frame():
     finally:
         logf.close()
         cv2.destroyAllWindows()
-        picam2.release()
+        camera_manager.release_camera()

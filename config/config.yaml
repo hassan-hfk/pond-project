@@ -1,23 +1,23 @@
 calibration:
   depth_scale: ''
-  focal_px: 60
+  focal_px: 99.6
   img_size:
-  - '640'
-  - '640'
+  - 640
+  - 640
   ref_box_norm:
-  - '0.1338623046875'
-  - '0.23828125'
-  - '0.6916748046875'
-  - '0.70703125'
-  ref_distance_m: 1
-  ref_height_m: 5
+  - 0.165625
+  - 0.209375
+  - 0.6734375
+  - 0.5984375
+  ref_distance_m: 2.0
+  ref_height_m: 5.0
   vertical_vp:
-  - '388.66890764094956'
-  - '12064.004451038576'
+  - -84.08408408408408
+  - -2731.5765765765764
 camera:
   backend: auto
   device: 0
-  fps: 20
+  fps: 5
   height: 640
   width: 640
 gpio:
@@ -28,7 +28,7 @@ logging:
   events_file: events.log
 model:
   conf_thresh: 0.5
-  yolov8_path: models/best.pt
+  yolov8_path: models/best_ncnn_model
 rois:
 - - - 0.1609375
     - 0.18790283203125

@@ -137,11 +137,13 @@ class CameraManager:
             if self.use_picamera:
                 frame = self.camera.capture_array()
                 frame = cv2.resize(frame, (self.width, self.height))
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 return True, frame
             else:
                 ret, frame = self.camera.read()
                 if ret:
                     frame = cv2.resize(frame, (self.width, self.height))
+                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 return ret, frame
     
     def force_release(self):
