@@ -74,6 +74,156 @@ def calibration_feed():
     return Response(generate_calibration_frames(),
                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
+from db_handler import update_feedback, resend_email, get_email_stats
+
+@app.route('/api/feedback/<int:event_id>/<feedback_type>')
+def api_feedback(event_id, feedback_type):
+    """
+    Handle feedback from email links
+    Routes: /api/feedback/123/correct or /api/feedback/123/incorrect
+    """
+    try:
+        is_correct = feedback_type.lower() == 'correct'
+        
+        # Update feedback in database
+        update_feedback(event_id, is_correct)
+        
+        # Return a nice HTML page
+        feedback_text = "Correct" if is_correct else "Incorrect"
+        emoji = "✅" if is_correct else "❌"
+        color = "#27ae60" if is_correct else "#e74c3c"
+        
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Feedback Received</title>
+            <style>
+                body {{
+                    margin: 0;
+                    padding: 0;
+                    font-family: Arial, sans-serif;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    min-height: 100vh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }}
+                .container {{
+                    background: white;
+                    padding: 50px;
+                    border-radius: 15px;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                    text-align: center;
+                    max-width: 500px;
+                }}
+                .emoji {{
+                    font-size: 80px;
+                    margin-bottom: 20px;
+                }}
+                h1 {{
+                    color: {color};
+                    margin: 0 0 20px 0;
+                    font-size: 32px;
+                }}
+                p {{
+                    color: #666;
+                    font-size: 18px;
+                    line-height: 1.6;
+                    margin: 0 0 30px 0;
+                }}
+                .btn {{
+                    display: inline-block;
+                    background: #3498db;
+                    color: white;
+                    text-decoration: none;
+                    padding: 15px 40px;
+                    border-radius: 8px;
+                    font-weight: bold;
+                    transition: background 0.3s;
+                }}
+                .btn:hover {{
+                    background: #2980b9;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="emoji">{emoji}</div>
+                <h1>Thank You!</h1>
+                <p>
+                    Your feedback has been recorded.<br>
+                    You marked this detection as <strong>{feedback_text}</strong>.
+                </p>
+                <p style="font-size: 14px; color: #999;">
+                    Event ID: #{event_id}
+                </p>
+                <a href="/" class="btn">View Dashboard</a>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return html
+        
+    except Exception as e:
+        print(f"[API] Error processing feedback: {e}")
+        return f"""
+        <html>
+        <body style="font-family: Arial; text-align: center; padding: 50px;">
+            <h1 style="color: #e74c3c;">❌ Error</h1>
+            <p>Could not process feedback: {str(e)}</p>
+            <a href="/" style="color: #3498db;">Go to Dashboard</a>
+        </body>
+        </html>
+        """, 500
+
+@app.route('/api/email/test')
+def test_email():
+    """Test email configuration"""
+    try:
+        from email_handler import EmailNotifier
+        
+        notifier = EmailNotifier(str(CONFIG_PATH))
+        success, message = notifier.test_email()
+        
+        return jsonify({
+            'status': 'success' if success else 'error',
+            'message': message
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/email/resend/<int:event_id>')
+def resend_email_route(event_id):
+    """Resend email for a specific event"""
+    success, message = resend_email(event_id)
+    
+    return jsonify({
+        'status': 'success' if success else 'error',
+        'message': message
+    })
+
+@app.route('/api/email/stats')
+def email_stats():
+    """Get email statistics"""
+    stats = get_email_stats()
+    
+    if stats:
+        return jsonify(stats)
+    else:
+        return jsonify({'error': 'Could not retrieve stats'}), 500
+
+@app.route('/email_settings')
+def email_settings():
+    """Email settings configuration page"""
+    return render_template('email_settings.html')
+
 def generate_calibration_frames():
     """Generate video frames for calibration"""
     try:

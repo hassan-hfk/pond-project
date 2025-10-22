@@ -20,6 +20,14 @@ camera:
   fps: 5
   height: 640
   width: 640
+email:
+  app_url: http://192.168.43.88:5000
+  enabled: true
+  recipient_email: khanhassanfarooq2002@gmail.com
+  sender_email: rubinpondproject@gmail.com
+  sender_password: hhba wdib lubv xcfw
+  smtp_port: 587
+  smtp_server: smtp.gmail.com
 gpio:
   active_high: true
   enabled: true
@@ -27,7 +35,7 @@ gpio:
 logging:
   events_file: events.log
 model:
-  conf_thresh: 0.5
+  conf_thresh: 0.25
   yolov8_path: models/best_ncnn_model
 rois:
 - - - 0.1609375
