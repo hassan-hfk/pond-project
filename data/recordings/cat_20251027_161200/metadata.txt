@@ -1,0 +1,4 @@
+fps=5
+class=cat
+timestamp=20251027_161200
+size=640x640

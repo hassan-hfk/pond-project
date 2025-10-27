@@ -680,7 +680,11 @@ def get_recordings():
 def update_feedback(event_id, is_correct):
     """Update feedback for an event"""
     try:
-        is_correct_bool = is_correct.lower() == 'true'
+        if isinstance(is_correct, str):
+            is_correct_bool = is_correct.lower() == 'true'
+        else:
+            is_correct_bool = bool(is_correct)
+
         
         conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
         cursor = conn.cursor()

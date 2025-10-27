@@ -21,8 +21,10 @@ camera:
   height: 640
   width: 640
 email:
-  app_url: http://192.168.43.88:5000
+  api_url: http://127.0.0.1:4040
+  app_url: https://ferny-colton-independently.ngrok-free.dev 
   enabled: true
+  feedback_api_url: https://ferny-colton-independently.ngrok-free.dev 
   recipient_email: khanhassanfarooq2002@gmail.com
   sender_email: rubinpondproject@gmail.com
   sender_password: hhba wdib lubv xcfw
@@ -35,7 +37,7 @@ gpio:
 logging:
   events_file: events.log
 model:
-  conf_thresh: 0.25
+  conf_thresh: 0.65
   yolov8_path: models/best_ncnn_model
 rois:
 - - - 0.1609375

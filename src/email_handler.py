@@ -34,7 +34,11 @@ class EmailNotifier:
         self.recipient_email = email_cfg.get('recipient_email', '')
         self.app_url = email_cfg.get('app_url', 'http://localhost:5000')
         
+        # Feedback API URL (can be different from app_url for external access)
+        self.feedback_api_url = email_cfg.get('feedback_api_url', 'http://localhost:8000')
+        
         print(f"[EMAIL] Initialized - Enabled: {self.enabled}")
+        print(f"[EMAIL] Feedback API: {self.feedback_api_url}")
         if self.enabled and not all([self.sender_email, self.sender_password, self.recipient_email]):
             print("[EMAIL] ⚠️  Warning: Email enabled but credentials incomplete")
     
@@ -56,11 +60,15 @@ class EmailNotifier:
             return False
         
         try:
-            # Extract video thumbnail
+            # Check video file size
+            video_size_mb = os.path.getsize(video_path) / (1024 * 1024)
+            print(f"[EMAIL] Video size: {video_size_mb:.2f} MB")
+            
+            # Extract thumbnail for email preview
             thumbnail_path = self._extract_thumbnail(video_path)
             
-            # Create email
-            msg = self._create_email_message(event_id, event_data, thumbnail_path)
+            # Create email with video attachment
+            msg = self._create_email_message(event_id, event_data, video_path, thumbnail_path)
             
             # Send email
             success = self._send_email(msg)
@@ -113,9 +121,9 @@ class EmailNotifier:
             print(f"[EMAIL] Error extracting thumbnail: {e}")
             return None
     
-    def _create_email_message(self, event_id, event_data, thumbnail_path):
-        """Create email message with HTML content and thumbnail"""
-        msg = MIMEMultipart('related')
+    def _create_email_message(self, event_id, event_data, video_path, thumbnail_path):
+        """Create email message with HTML content, thumbnail preview, and VIDEO ATTACHMENT"""
+        msg = MIMEMultipart('mixed')
         
         # Email headers
         event_type = event_data.get('type', 'detection')
@@ -129,21 +137,51 @@ class EmailNotifier:
         # Create HTML content
         html_content = self._create_html_content(event_id, event_data, timestamp)
         
-        # Attach HTML
+        # Attach HTML with related content (for thumbnail preview)
+        msg_related = MIMEMultipart('related')
+        msg.attach(msg_related)
+        
         msg_alternative = MIMEMultipart('alternative')
-        msg.attach(msg_alternative)
+        msg_related.attach(msg_alternative)
         
         html_part = MIMEText(html_content, 'html')
         msg_alternative.attach(html_part)
         
-        # Attach thumbnail if available
+        # Attach thumbnail as inline image (for preview in email)
         if thumbnail_path and os.path.exists(thumbnail_path):
             with open(thumbnail_path, 'rb') as f:
                 img_data = f.read()
             
             image = MIMEImage(img_data, name=os.path.basename(thumbnail_path))
             image.add_header('Content-ID', '<thumbnail>')
-            msg.attach(image)
+            image.add_header('Content-Disposition', 'inline', filename=os.path.basename(thumbnail_path))
+            msg_related.attach(image)
+        
+        # Attach VIDEO FILE
+        if video_path and os.path.exists(video_path):
+            video_filename = os.path.basename(video_path)
+            
+            with open(video_path, 'rb') as f:
+                video_data = f.read()
+            
+            # Determine MIME type based on extension
+            if video_path.endswith('.webm'):
+                mime_subtype = 'webm'
+            elif video_path.endswith('.mp4'):
+                mime_subtype = 'mp4'
+            elif video_path.endswith('.avi'):
+                mime_subtype = 'x-msvideo'
+            else:
+                mime_subtype = 'octet-stream'
+            
+            video_part = MIMEBase('video', mime_subtype)
+            video_part.set_payload(video_data)
+            encoders.encode_base64(video_part)
+            video_part.add_header('Content-Disposition', f'attachment; filename="{video_filename}"')
+            
+            msg.attach(video_part)
+            
+            print(f"[EMAIL] Attached video: {video_filename} ({len(video_data)/1024/1024:.2f} MB)")
         
         return msg
     
@@ -166,8 +204,9 @@ class EmailNotifier:
             alert_text = 'ℹ️  DETECTION'
         
         # Feedback button URLs
-        correct_url = f"{self.app_url}/api/feedback/{event_id}/correct"
-        incorrect_url = f"{self.app_url}/api/feedback/{event_id}/incorrect"
+        correct_url = f"{self.feedback_api_url}/api/feedback/{event_id}/correct"
+        incorrect_url = f"{self.feedback_api_url}/api/feedback/{event_id}/incorrect"
+
         view_url = f"{self.app_url}/?showEventList=true"
         
         html = f"""
