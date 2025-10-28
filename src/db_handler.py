@@ -101,43 +101,49 @@ def insert_detection(filename, event_dict, output_dir="data/recordings"):
 def send_email_async(event_id, filename, event_dict, output_dir):
     """Send email asynchronously to avoid blocking the main thread"""
     try:
-        # Wait for video file to be ready (WebM conversion takes time)
         video_path = Path(output_dir) / filename
-        
-        # Wait up to 30 seconds for the file to exist
+
+        # Wait up to 30 seconds for the WebM file to be created and finalized
         max_wait = 30
         wait_count = 0
-        while not video_path.exists() and wait_count < max_wait:
-            print(f"[DB] Waiting for video file: {filename} ({wait_count}/{max_wait}s)")
+        while wait_count < max_wait:
+            if video_path.exists():
+                size = os.path.getsize(video_path)
+                # consider video ready if it's larger than 100 KB
+                if size > 100 * 1024:
+                    print(f"[DB] 🎥 Video ready ({size/1024/1024:.2f} MB)")
+                    break
+                else:
+                    print(f"[DB] ⏳ Video found but still writing ({size/1024:.1f} KB)")
+            else:
+                print(f"[DB] Waiting for video file: {filename} ({wait_count}/{max_wait}s)")
             time.sleep(1)
             wait_count += 1
-        
-        if not video_path.exists():
-            print(f"[DB] ⚠️ Video file not ready after {max_wait}s: {video_path}")
-            # Try to find any related file (JPEG directory or partial WebM)
+
+        if not video_path.exists() or os.path.getsize(video_path) <= 100 * 1024:
+            print(f"[DB] ⚠️ Video not ready after {max_wait}s: {video_path}")
             recordings_dir = Path(output_dir)
             possible_files = list(recordings_dir.glob(f"*{filename.split('_')[0]}*"))
             if possible_files:
                 print(f"[DB] Found alternative files: {[f.name for f in possible_files]}")
-        
+
         print(f"[DB] 📧 Attempting to send email for event {event_id}...")
         print(f"[DB] Video path: {video_path}")
         print(f"[DB] File exists: {video_path.exists()}")
-        
+
         email_success = email_notifier.send_detection_email(
             event_id=event_id,
             event_data=event_dict,
             video_path=str(video_path)
         )
-        
+
         if email_success:
-            # Mark email as sent in database
             cursor.execute('UPDATE events SET email_sent = 1 WHERE id = ?', (event_id,))
             conn.commit()
             print(f"[DB] ✅ Email sent successfully for event {event_id}")
         else:
             print(f"[DB] ❌ Failed to send email for event {event_id}")
-            
+
     except Exception as e:
         print(f"[DB] ❌ Error in email async thread: {e}")
         import traceback
