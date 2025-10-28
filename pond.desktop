@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Start Detection System
+Comment=Launches the detection system
+Exec=lxterminal -e "python3 /home/pi/Desktop/pond-project/start_system.py"
+Icon=system-run
+Terminal=true
